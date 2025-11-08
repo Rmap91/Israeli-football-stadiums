@@ -506,7 +506,6 @@ class StadiumsApp {
           <button class="tab-button active" data-tab="overview">סקירה כללית</button>
           <button class="tab-button" data-tab="dining">מסעדות וברים</button>
           <button class="tab-button" data-tab="parking">חניה ותחבורה ציבורית</button>
-          <button class="tab-button" data-tab="location">מיקום</button>
         </div>
         
         <!-- Overview Tab -->
@@ -515,6 +514,14 @@ class StadiumsApp {
             <span class="detail-label">📍 עיר:</span>
             <span class="detail-value">${stadium.city || 'N/A'}</span>
           </div>
+
+          ${stadium.latitude && stadium.longitude ? `
+          <div style="margin: 15px 0;">
+            <button class="compact-map-btn" onclick="window.stadiumsApp.openInMaps(${stadium.latitude}, ${stadium.longitude})">
+              📍 פתח ב-Google Maps
+            </button>
+          </div>
+          ` : ''}
 
           ${teamsList.length > 1 ? `
           <div class="team-filter">
@@ -617,33 +624,6 @@ class StadiumsApp {
               <div class="no-data">לחץ על הכפתור לקבלת מידע על תחנות אוטובוס ורכבת בקרבת מקום</div>
             </div>
           </div>
-        </div>
-        
-        <!-- Location Tab -->
-        <div class="tab-content" id="location-tab">
-          ${stadium.latitude && stadium.longitude ? `
-            <div class="location-section">
-              <h3 style="margin-bottom: 1rem; color: var(--primary-color);">מיקום</h3>
-              <p style="margin-bottom: 1.5rem; color: var(--text-light);">
-                ${stadium.address || 'כתובת לא זמינה'}
-              </p>
-            </div>
-            
-            <div class="location-actions">
-              <button class="action-btn primary" onclick="window.stadiumsApp.openInMaps(${stadium.latitude}, ${stadium.longitude})">
-                <span style="font-size: 1.2em; margin-left: 8px;">📍</span>
-                פתח ב-Google Maps
-              </button>
-            </div>
-            
-            <div style="margin-top: 20px; padding: 15px; background: #f5f5f5; border-radius: 8px; text-align: center; color: var(--text-light);">
-              <p>לפרטים על חניה ותחבורה ציבורית, עבור ללשונית "חניה ותחבורה ציבורית"</p>
-            </div>
-          ` : `
-            <div class="no-data">
-              <p>מידע מיקום לא זמין לאצטדיון זה</p>
-            </div>
-          `}
         </div>
       </div>
     `;
