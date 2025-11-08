@@ -774,7 +774,7 @@ class StadiumsApp {
               <span class="match-time">🕐 ${timeStr}</span>
             </div>
             <div class="match-actions">
-              <button class="btn-add-calendar" onclick="app.addToCalendar(${match.id}, '${match.home.name}', '${match.away.name}', '${match.date}', '${match.venue?.name || ''}')" title="הוסף ליומן">
+              <button class="btn-add-calendar" data-match-id="${match.id}" title="הוסף ליומן">
                 📅 הוסף ליומן
               </button>
             </div>
@@ -783,6 +783,18 @@ class StadiumsApp {
       }).join('');
 
       container.innerHTML = matchesHTML;
+      
+      // Add event listeners to calendar buttons
+      container.querySelectorAll('.btn-add-calendar').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const matchId = parseInt(btn.dataset.matchId);
+          const match = matches.find(m => m.id === matchId);
+          if (match) {
+            this.addToCalendar(match);
+          }
+        });
+      });
   }
 
   filterMatchesByTeams(stadiumId) {
@@ -849,25 +861,29 @@ class StadiumsApp {
     return events ? `<div class="match-events">${events}</div>` : '';
   }
 
-  addToCalendar(matchId, homeTeam, awayTeam, dateStr, venue) {
+  addToCalendar(match) {
     // Create ICS calendar file
-    const matchDate = new Date(dateStr);
+    const matchDate = new Date(match.date);
     const endDate = new Date(matchDate.getTime() + (2 * 60 * 60 * 1000)); // 2 hours duration
 
     const formatDate = (date) => {
       return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
     };
 
+    const homeTeam = match.home.nameHebrew || match.home.name;
+    const awayTeam = match.away.nameHebrew || match.away.name;
+    const venue = match.venue || 'אצטדיון';
+    
     const title = `${homeTeam} נגד ${awayTeam}`;
-    const location = venue || 'אצטדיון';
-    const description = `משחק כדורגל: ${homeTeam} מארח את ${awayTeam}`;
+    const location = venue;
+    const description = `משחק כדורגל: ${homeTeam} מארח את ${awayTeam}\nליגה: ${match.league.name}`;
 
     const icsContent = [
       'BEGIN:VCALENDAR',
       'VERSION:2.0',
       'PRODID:-//Israeli Football Stadiums//Stadium App//HE',
       'BEGIN:VEVENT',
-      `UID:match-${matchId}@fanstadiums.com`,
+      `UID:match-${match.id}@fanstadiums.com`,
       `DTSTAMP:${formatDate(new Date())}`,
       `DTSTART:${formatDate(matchDate)}`,
       `DTEND:${formatDate(endDate)}`,
