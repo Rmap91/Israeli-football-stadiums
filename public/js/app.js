@@ -134,6 +134,9 @@ class StadiumsApp {
         this.hideModal();
       }
     });
+
+    // League table toggle handlers
+    this.attachTableToggleHandlers();
   }
 
   async loadStadiums() {
@@ -1611,11 +1614,15 @@ class StadiumsApp {
   }
 
   attachTableToggleHandlers() {
-    document.querySelectorAll('.league-table__title').forEach(title => {
-      title.addEventListener('click', (e) => {
-        const table = e.target.closest('.league-table');
-        table.classList.toggle('collapsed');
-      });
+    // Use event delegation to handle clicks even if tables are loaded later
+    document.addEventListener('click', (e) => {
+      const title = e.target.closest('.league-table__title');
+      if (title) {
+        const table = title.closest('.league-table');
+        if (table) {
+          table.classList.toggle('collapsed');
+        }
+      }
     });
   }
 }
