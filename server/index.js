@@ -446,35 +446,61 @@ app.get('/api/stadiums/:id/matches', async (req, res) => {
         
         // Fetch fixtures from both Israeli leagues
         for (const leagueId of israeliLeagues) {
-          // Get upcoming and current live matches
-          const response = await axios.get(`${API_FOOTBALL_BASE_URL}/fixtures`, {
-            headers: { 
-              'x-apisports-key': API_FOOTBALL_KEY,
-              'x-rapidapi-host': 'v3.football.api-sports.io'
-            },
-            params: {
-              league: leagueId,
-              team: teamId,
-              next: 15, // Increased to get more matches
-              timezone: 'Asia/Jerusalem'
-            }
-          });
+          // Get last 5 matches and next 15 matches (to include today's games)
+          const responses = await Promise.all([
+            axios.get(`${API_FOOTBALL_BASE_URL}/fixtures`, {
+              headers: { 
+                'x-apisports-key': API_FOOTBALL_KEY,
+                'x-rapidapi-host': 'v3.football.api-sports.io'
+              },
+              params: {
+                league: leagueId,
+                team: teamId,
+                last: 5, // Last 5 matches (includes today if already finished)
+                timezone: 'Asia/Jerusalem'
+              }
+            }),
+            axios.get(`${API_FOOTBALL_BASE_URL}/fixtures`, {
+              headers: { 
+                'x-apisports-key': API_FOOTBALL_KEY,
+                'x-rapidapi-host': 'v3.football.api-sports.io'
+              },
+              params: {
+                league: leagueId,
+                team: teamId,
+                next: 15, // Next 15 matches
+                timezone: 'Asia/Jerusalem'
+              }
+            })
+          ]);
 
-          console.log(`Upcoming matches for team ${teamId} in league ${leagueId}:`, response.data.results);
+          console.log(`Fetched ${responses[0].data.results} past and ${responses[1].data.results} upcoming matches for team ${teamId} in league ${leagueId}`);
 
-          if (response.data && response.data.response) {
-            // Filter: home matches that are upcoming OR currently live
-            const now = Date.now() / 1000; // Convert to seconds
-            const teamMatches = response.data.response
+          // Combine past and future matches
+          const allMatches = [
+            ...(responses[0].data?.response || []),
+            ...(responses[1].data?.response || [])
+          ];
+
+          if (allMatches.length > 0) {
+            // Filter: matches (home or away) from today or future
+            const todayStart = new Date();
+            todayStart.setHours(0, 0, 0, 0);
+            const todayTimestamp = todayStart.getTime() / 1000;
+            
+            const teamMatches = allMatches
               .filter(match => {
-                const isHomeMatch = match.teams.home.id === teamId;
+                const isTeamMatch = match.teams.home.id === teamId || match.teams.away.id === teamId;
                 const isLive = ['1H', '2H', 'HT', 'LIVE', 'ET', 'P', 'BT'].includes(match.fixture.status.short);
-                const isUpcoming = match.fixture.timestamp > now;
-                const isFinished = ['FT', 'AET', 'PEN', 'PST', 'CANC', 'ABD', 'AWD', 'WO'].includes(match.fixture.status.short);
+                const isTodayOrLater = match.fixture.timestamp >= todayTimestamp;
                 
-                // Include home matches that are live OR upcoming (not finished)
-                return isHomeMatch && (isLive || (isUpcoming && !isFinished));
+                // Include all team matches (home or away) that are from today onwards OR currently live
+                return isTeamMatch && (isLive || isTodayOrLater);
               })
+              // Remove duplicates (same match might be in both past and next)
+              .filter((match, index, self) => 
+                index === self.findIndex(m => m.fixture.id === match.fixture.id)
+              )
               .map(match => ({
                 id: match.fixture.id,
                 date: match.fixture.date,
