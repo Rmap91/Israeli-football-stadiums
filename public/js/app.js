@@ -518,7 +518,7 @@ class StadiumsApp {
           ${stadium.latitude && stadium.longitude ? `
           <div style="margin: 15px 0;">
             <button class="compact-map-btn" onclick="window.stadiumsApp.openInMaps(${stadium.latitude}, ${stadium.longitude})">
-              📍 פתח ב-Google Maps
+              🧭 נווט לאצטדיון
             </button>
           </div>
           ` : ''}
@@ -1435,7 +1435,8 @@ class StadiumsApp {
   }
 
   openInMaps(lat, lng) {
-    const url = `https://www.google.com/maps?q=${lat},${lng}`;
+    // Open Google Maps with directions from user's current location
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
     window.open(url, '_blank');
   }
 
