@@ -446,7 +446,7 @@ app.get('/api/stadiums/:id/matches', async (req, res) => {
         
         // Fetch fixtures from both Israeli leagues
         for (const leagueId of israeliLeagues) {
-          // Get only upcoming matches
+          // Get upcoming and current live matches
           const response = await axios.get(`${API_FOOTBALL_BASE_URL}/fixtures`, {
             headers: { 
               'x-apisports-key': API_FOOTBALL_KEY,
@@ -455,7 +455,7 @@ app.get('/api/stadiums/:id/matches', async (req, res) => {
             params: {
               league: leagueId,
               team: teamId,
-              next: 10,
+              next: 15, // Increased to get more matches
               timezone: 'Asia/Jerusalem'
             }
           });
@@ -463,16 +463,17 @@ app.get('/api/stadiums/:id/matches', async (req, res) => {
           console.log(`Upcoming matches for team ${teamId} in league ${leagueId}:`, response.data.results);
 
           if (response.data && response.data.response) {
-            // Filter only upcoming matches (not started yet) at this stadium (home team)
+            // Filter: home matches that are upcoming OR currently live
             const now = Date.now() / 1000; // Convert to seconds
             const teamMatches = response.data.response
               .filter(match => {
-                const isUpcoming = match.fixture.timestamp > now;
                 const isHomeMatch = match.teams.home.id === teamId;
-                const notFinished = !match.fixture.status.short.includes('FT') && 
-                                   !match.fixture.status.short.includes('AET') &&
-                                   !match.fixture.status.short.includes('PEN');
-                return isHomeMatch && isUpcoming && notFinished;
+                const isLive = ['1H', '2H', 'HT', 'LIVE', 'ET', 'P', 'BT'].includes(match.fixture.status.short);
+                const isUpcoming = match.fixture.timestamp > now;
+                const isFinished = ['FT', 'AET', 'PEN', 'PST', 'CANC', 'ABD', 'AWD', 'WO'].includes(match.fixture.status.short);
+                
+                // Include home matches that are live OR upcoming (not finished)
+                return isHomeMatch && (isLive || (isUpcoming && !isFinished));
               })
               .map(match => ({
                 id: match.fixture.id,
@@ -495,7 +496,22 @@ app.get('/api/stadiums/:id/matches', async (req, res) => {
                   name: match.teams.away.name,
                   logo: match.teams.away.logo
                 },
-                status: match.fixture.status.long,
+                status: {
+                  long: match.fixture.status.long,
+                  short: match.fixture.status.short,
+                  elapsed: match.fixture.status.elapsed
+                },
+                goals: {
+                  home: match.goals?.home,
+                  away: match.goals?.away
+                },
+                score: {
+                  halftime: match.score?.halftime,
+                  fulltime: match.score?.fulltime,
+                  extratime: match.score?.extratime,
+                  penalty: match.score?.penalty
+                },
+                events: match.events || [],
                 // Broadcast data not available for Israeli leagues in API-Football
                 broadcast: null
               }));
