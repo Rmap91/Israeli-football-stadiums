@@ -491,30 +491,31 @@ app.get('/api/stadiums/:id/matches', async (req, res) => {
 
           console.log(`Fetched ${responses[0].data.results} live, ${responses[1].data.results} past, and ${responses[2].data.results} upcoming matches for team ${teamId} in league ${leagueId}`);
 
-          // Combine live, past and future matches
-          const allMatches = [
+          // Combine live, past and future matches from this API call
+          const fetchedMatches = [
             ...(responses[0].data?.response || []), // Live matches (priority)
             ...(responses[1].data?.response || []), // Last 3
             ...(responses[2].data?.response || [])  // Next 20
           ];
 
-          if (allMatches.length > 0) {
-            console.log(`Processing ${allMatches.length} total matches for team ${teamId}`);
+          if (fetchedMatches.length > 0) {
+            console.log(`Processing ${fetchedMatches.length} total matches for team ${teamId}`);
             
             // Filter: include live matches OR upcoming matches
             const now = Date.now() / 1000;
             
-            const teamMatches = allMatches
+            const teamMatches = fetchedMatches
               .filter(match => {
                 const isTeamMatch = match.teams.home.id === teamId || match.teams.away.id === teamId;
                 const isLive = ['1H', '2H', 'HT', 'LIVE', 'ET', 'P', 'BT'].includes(match.fixture.status.short);
                 const isUpcoming = match.fixture.timestamp > now;
                 const isFinished = ['FT', 'AET', 'PEN'].includes(match.fixture.status.short);
                 
-                console.log(`Match ${match.fixture.id}: ${match.teams.home.name} vs ${match.teams.away.name} - Status: ${match.fixture.status.short}, isLive: ${isLive}, isUpcoming: ${isUpcoming}, isFinished: ${isFinished}`);
+                const shouldInclude = isTeamMatch && (isLive || (isUpcoming && !isFinished));
+                console.log(`Match ${match.fixture.id}: ${match.teams.home.name} vs ${match.teams.away.name} - Status: ${match.fixture.status.short}, isLive: ${isLive}, isUpcoming: ${isUpcoming}, isFinished: ${isFinished}, isTeamMatch: ${isTeamMatch}, INCLUDE: ${shouldInclude}`);
                 
                 // Include: LIVE matches (highest priority) OR upcoming matches (not finished)
-                return isTeamMatch && (isLive || (isUpcoming && !isFinished));
+                return shouldInclude;
               })
               // Remove duplicates (same match might be in multiple calls)
               .filter((match, index, self) => 
@@ -569,8 +570,19 @@ app.get('/api/stadiums/:id/matches', async (req, res) => {
       }
     }
 
-    // Sort by date (soonest first)
-    allMatches.sort((a, b) => a.timestamp - b.timestamp);
+    // Sort by date (soonest first), but put live matches first
+    allMatches.sort((a, b) => {
+      const aIsLive = ['1H', '2H', 'HT', 'LIVE', 'ET', 'P', 'BT'].includes(a.status.short);
+      const bIsLive = ['1H', '2H', 'HT', 'LIVE', 'ET', 'P', 'BT'].includes(b.status.short);
+      if (aIsLive && !bIsLive) return -1; // Live matches first
+      if (!aIsLive && bIsLive) return 1;
+      return a.timestamp - b.timestamp; // Then by date
+    });
+    
+    console.log(`Total matches collected: ${allMatches.length}`);
+    if (allMatches.length > 0) {
+      console.log(`First match: ${allMatches[0].home.name} vs ${allMatches[0].away.name}, Status: ${allMatches[0].status.short}`);
+    }
     
     // For stadiums with multiple teams, get 3 matches per team
     let upcomingMatches;
