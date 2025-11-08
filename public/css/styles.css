@@ -1774,15 +1774,18 @@ body {
     padding: 0;
     direction: rtl;
     overflow-x: auto;
+    overflow-y: hidden;
     max-height: 0;
     opacity: 0;
     transition: max-height 0.4s ease, opacity 0.3s ease, padding 0.3s ease;
+    background: white;
 }
 
 .league-table:not(.collapsed) .table-wrapper {
     max-height: 2000px;
     opacity: 1;
     padding: 15px 0;
+    overflow-y: visible;
 }
 
 .table-loading {
@@ -1790,6 +1793,7 @@ body {
     padding: 40px 20px;
     color: var(--text-light);
     font-size: 14px;
+    background: white;
 }
 
 .standings-table {
