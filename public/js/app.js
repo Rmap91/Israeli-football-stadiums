@@ -505,8 +505,8 @@ class StadiumsApp {
         <div class="tab-buttons">
           <button class="tab-button active" data-tab="overview">סקירה כללית</button>
           <button class="tab-button" data-tab="dining">מסעדות וברים</button>
-          <button class="tab-button" data-tab="parking">חניות</button>
-          <button class="tab-button" data-tab="location">מיקום ונגישות</button>
+          <button class="tab-button" data-tab="parking">חניה ותחבורה ציבורית</button>
+          <button class="tab-button" data-tab="location">מיקום</button>
         </div>
         
         <!-- Overview Tab -->
@@ -595,7 +595,7 @@ class StadiumsApp {
           </div>
         </div>
         
-        <!-- Parking Tab -->
+        <!-- Parking and Public Transport Tab -->
         <div class="tab-content" id="parking-tab">
           <button class="refresh-btn" onclick="window.stadiumsApp.refreshParking(${stadiumId})">
             🔄 רענן נתונים מ-Google Places
@@ -607,13 +607,23 @@ class StadiumsApp {
               <div class="loading-spinner">טוען חניות מ-Google Places...</div>
             </div>
           </div>
+          
+          <div class="transit-section" style="margin-top: 30px;">
+            <h3>🚌 תחבורה ציבורית</h3>
+            <button class="action-btn secondary" onclick="window.stadiumsApp.loadTransitInfo(${stadiumId})" style="margin-bottom: 15px;">
+              טען תחנות אוטובוס ורכבת
+            </button>
+            <div id="transit-info-parking" class="nearby-places">
+              <div class="no-data">לחץ על הכפתור לקבלת מידע על תחנות אוטובוס ורכבת בקרבת מקום</div>
+            </div>
+          </div>
         </div>
         
         <!-- Location Tab -->
         <div class="tab-content" id="location-tab">
           ${stadium.latitude && stadium.longitude ? `
             <div class="location-section">
-              <h3 style="margin-bottom: 1rem; color: var(--primary-color);">מיקום ונגישות</h3>
+              <h3 style="margin-bottom: 1rem; color: var(--primary-color);">מיקום</h3>
               <p style="margin-bottom: 1.5rem; color: var(--text-light);">
                 ${stadium.address || 'כתובת לא זמינה'}
               </p>
@@ -624,14 +634,10 @@ class StadiumsApp {
                 <span style="font-size: 1.2em; margin-left: 8px;">📍</span>
                 פתח ב-Google Maps
               </button>
-              <button class="action-btn secondary" onclick="window.stadiumsApp.loadTransitInfo(${stadiumId})">
-                <span style="font-size: 1.2em; margin-left: 8px;">🚌</span>
-                תחבורה ציבורית
-              </button>
             </div>
             
-            <div id="transit-info" class="nearby-places">
-              <div class="no-data">לחץ על "תחבורה ציבורית" לקבלת מידע על תחנות אוטובוס ורכבת בקרבת מקום</div>
+            <div style="margin-top: 20px; padding: 15px; background: #f5f5f5; border-radius: 8px; text-align: center; color: var(--text-light);">
+              <p>לפרטים על חניה ותחבורה ציבורית, עבור ללשונית "חניה ותחבורה ציבורית"</p>
             </div>
           ` : `
             <div class="no-data">
@@ -1454,14 +1460,15 @@ class StadiumsApp {
   }
 
   async loadTransitInfo(stadiumId) {
-    const transitContainer = document.getElementById('transit-info');
+    // Check for the container in the parking tab
+    const transitContainer = document.getElementById('transit-info-parking');
     if (!transitContainer) return;
 
     transitContainer.innerHTML = '<div class="loading-spinner">טוען מידע תחבורה...</div>';
     
     try {
       const transitData = await this.fetchNearbyPlaces(stadiumId, 'transit_station');
-      this.renderNearbyPlaces('transit-info', transitData, 'תחבורה ציבורית');
+      this.renderNearbyPlaces('transit-info-parking', transitData, 'תחבורה ציבורית');
     } catch (error) {
       console.error('Error loading transit info:', error);
       transitContainer.innerHTML = '<div class="no-data">שגיאה בטעינת מידע תחבורה</div>';
