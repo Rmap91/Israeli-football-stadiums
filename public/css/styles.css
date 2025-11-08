@@ -1721,52 +1721,82 @@ body {
 
 .standings-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(550px, 1fr));
-    gap: 24px;
-    max-width: 1600px;
+    grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+    gap: 20px;
+    max-width: 1100px;
     margin: 0 auto;
-    padding: 0 20px;
+    padding: 0 15px;
 }
 
 .league-table {
     background: #ffffff;
-    border-radius: 16px;
+    border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
     border: 1px solid rgba(102, 126, 234, 0.1);
 }
 
 .league-table__title {
-    font-size: 22px;
-    font-weight: 800;
-    padding: 24px;
+    font-size: 18px;
+    font-weight: 700;
+    padding: 16px 20px;
     margin: 0;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     text-align: center;
     direction: rtl;
-    letter-spacing: 0.5px;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    letter-spacing: 0.3px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: background 0.3s ease;
+}
+
+.league-table__title:hover {
+    background: linear-gradient(135deg, #5568d3 0%, #653a8b 100%);
+}
+
+.league-table__title::after {
+    content: '▼';
+    font-size: 14px;
+    transition: transform 0.3s ease;
+}
+
+.league-table.collapsed .league-table__title::after {
+    transform: rotate(-90deg);
 }
 
 .table-wrapper {
     padding: 0;
     direction: rtl;
     overflow-x: auto;
+    max-height: 0;
+    opacity: 0;
+    transition: max-height 0.4s ease, opacity 0.3s ease, padding 0.3s ease;
+}
+
+.league-table:not(.collapsed) .table-wrapper {
+    max-height: 2000px;
+    opacity: 1;
+    padding: 15px 0;
 }
 
 .table-loading {
     text-align: center;
-    padding: 60px 20px;
+    padding: 40px 20px;
     color: var(--text-light);
-    font-size: 15px;
+    font-size: 14px;
 }
 
 .standings-table {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
-    font-size: 14px;
+    font-size: 13px;
 }
 
 .standings-table thead {
@@ -1777,11 +1807,11 @@ body {
 }
 
 .standings-table th {
-    padding: 16px 8px;
+    padding: 10px 6px;
     font-weight: 700;
     color: #495057;
     text-align: center;
-    font-size: 12px;
+    font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 0.3px;
     border-bottom: 2px solid #667eea;
@@ -1789,12 +1819,13 @@ body {
 }
 
 .standings-table th:first-child {
-    width: 50px;
+    width: 40px;
 }
 
 .standings-table th:nth-child(2) {
     width: auto;
-    min-width: 180px;
+    text-align: right;
+    padding-right: 12px;
 }
 
 .standings-table th:nth-child(3),
@@ -1802,19 +1833,19 @@ body {
 .standings-table th:nth-child(5),
 .standings-table th:nth-child(6),
 .standings-table th:nth-child(7) {
-    width: 60px;
+    width: 45px;
 }
 
 .standings-table th:last-child {
-    width: 80px;
+    width: 60px;
 }
 
 .standings-table td {
-    padding: 12px 8px;
+    padding: 8px 6px;
     border-bottom: 1px solid #f1f3f5;
     text-align: center;
     vertical-align: middle;
-    font-size: 13px;
+    font-size: 12px;
 }
 
 .standings-table tbody tr {
@@ -1840,22 +1871,21 @@ body {
 .team-cell {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     text-align: right;
     justify-content: flex-start;
-    min-width: 180px;
-    max-width: 250px;
+    padding-right: 8px;
 }
 
 .team-logo {
-    width: 26px;
-    height: 26px;
+    width: 22px;
+    height: 22px;
     object-fit: contain;
     flex-shrink: 0;
-    border-radius: 4px;
+    border-radius: 3px;
     background: white;
     padding: 2px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .team-name {
@@ -1864,21 +1894,21 @@ body {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    font-size: 13px;
+    font-size: 12px;
     flex: 1;
 }
 
 .rank-cell {
-    font-weight: 800;
+    font-weight: 700;
     color: #6c757d;
-    font-size: 15px;
+    font-size: 13px;
     background: #f8f9fa;
 }
 
 .points-cell {
-    font-weight: 800;
+    font-weight: 700;
     color: #667eea;
-    font-size: 16px;
+    font-size: 14px;
     background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
 }
 

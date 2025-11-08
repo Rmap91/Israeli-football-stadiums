@@ -1605,6 +1605,18 @@ class StadiumsApp {
     `;
 
     container.innerHTML = html;
+    
+    // Add click handlers to collapse/expand tables
+    this.attachTableToggleHandlers();
+  }
+
+  attachTableToggleHandlers() {
+    document.querySelectorAll('.league-table__title').forEach(title => {
+      title.addEventListener('click', (e) => {
+        const table = e.target.closest('.league-table');
+        table.classList.toggle('collapsed');
+      });
+    });
   }
 }
 
