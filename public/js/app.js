@@ -148,6 +148,7 @@ class StadiumsApp {
       this.filteredStadiums = [...this.stadiums];
       
       this.sortAndRenderStadiums();
+      this.loadStandings(); // Load league standings
       this.hideLoading();
     } catch (error) {
       console.error('Error loading stadiums:', error);
@@ -1532,6 +1533,78 @@ class StadiumsApp {
     
     // Default football icon
     return 'https://upload.wikimedia.org/wikipedia/en/thumb/1/1f/Soccer_ball.svg/50px-Soccer_ball.svg.png';
+  }
+
+  async loadStandings() {
+    try {
+      const response = await fetch('/api/standings');
+      if (!response.ok) {
+        throw new Error('Failed to load standings');
+      }
+
+      const data = await response.json();
+      this.renderStandings('ligatHaalTable', data.ligatHaal, 'Ligat Ha\'al');
+      this.renderStandings('ligaLeumitTable', data.ligaLeumit, 'Liga Leumit');
+    } catch (error) {
+      console.error('Error loading standings:', error);
+      document.getElementById('ligatHaalTable').innerHTML = '<div class="table-loading">שגיאה בטעינת הנתונים</div>';
+      document.getElementById('ligaLeumitTable').innerHTML = '<div class="table-loading">שגיאה בטעינת הנתונים</div>';
+    }
+  }
+
+  renderStandings(containerId, standings, leagueName) {
+    const container = document.getElementById(containerId);
+    
+    if (!standings || standings.length === 0) {
+      container.innerHTML = '<div class="table-loading">אין נתונים זמינים</div>';
+      return;
+    }
+
+    const html = `
+      <table class="standings-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>קבוצה</th>
+            <th>משחקים</th>
+            <th>נצחונות</th>
+            <th>תיקו</th>
+            <th>הפסד</th>
+            <th>יחס</th>
+            <th>נקודות</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${standings.map((team, index) => {
+            const position = index + 1;
+            const isTop3 = position <= 3;
+            const isBottom3 = position > standings.length - 3;
+            const rowClass = isTop3 ? 'top-3' : isBottom3 ? 'bottom-3' : '';
+            const gdClass = team.goalsDiff > 0 ? 'gd-positive' : team.goalsDiff < 0 ? 'gd-negative' : '';
+
+            return `
+              <tr class="${rowClass}">
+                <td class="rank-cell">${position}</td>
+                <td>
+                  <div class="team-cell">
+                    <img src="${team.team.logo}" alt="${team.team.name}" class="team-logo" onerror="this.src='https://upload.wikimedia.org/wikipedia/en/thumb/1/1f/Soccer_ball.svg/50px-Soccer_ball.svg.png'">
+                    <span class="team-name">${team.team.name}</span>
+                  </div>
+                </td>
+                <td>${team.all.played}</td>
+                <td>${team.all.win}</td>
+                <td>${team.all.draw}</td>
+                <td>${team.all.lose}</td>
+                <td class="${gdClass}">${team.goalsDiff > 0 ? '+' : ''}${team.goalsDiff}</td>
+                <td class="points-cell">${team.points}</td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    `;
+
+    container.innerHTML = html;
   }
 }
 

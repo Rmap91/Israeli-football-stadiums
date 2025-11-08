@@ -622,6 +622,34 @@ app.get('/api/stadiums/:id/matches', async (req, res) => {
 // Serve static files
 app.use(express.static(path.join(__dirname, '../public')));
 
+// Get league standings
+app.get('/api/standings', async (req, res) => {
+  try {
+    const API_FOOTBALL_KEY = process.env.API_FOOTBALL_KEY;
+    const API_FOOTBALL_BASE_URL = 'https://v3.football.api-sports.io';
+    
+    // Fetch both league standings
+    const [ligat, leumit] = await Promise.all([
+      axios.get(`${API_FOOTBALL_BASE_URL}/standings`, {
+        headers: { 'x-apisports-key': API_FOOTBALL_KEY },
+        params: { league: 383, season: 2025 } // Ligat Ha'al
+      }),
+      axios.get(`${API_FOOTBALL_BASE_URL}/standings`, {
+        headers: { 'x-apisports-key': API_FOOTBALL_KEY },
+        params: { league: 382, season: 2025 } // Liga Leumit
+      })
+    ]);
+
+    res.json({
+      ligatHaal: ligat.data.response[0]?.league.standings[0] || [],
+      ligaLeumit: leumit.data.response[0]?.league.standings[0] || []
+    });
+  } catch (error) {
+    console.error('Error fetching standings:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Health check
 app.get('/health', (req, res) => {
   res.json({ 

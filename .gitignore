@@ -45,3 +45,15 @@ database/*.db-journal
 
 # Deployment instructions
 deploy-to-kudu.txt
+
+# Documentation archives
+*.tar.gz
+app-logs.zip
+webapp-logs.zip
+israeli-stadiums-*.zip
+
+# Utility scripts
+create-deploy-zip.js
+create_deploy_zip.py
+deploy-script.ps1
+update-*.js
