@@ -1729,9 +1729,16 @@ body {
 }
 
 .league-table {
-    background: #ffffff;
+    background: transparent;
     border-radius: 12px;
     overflow: hidden;
+    box-shadow: none;
+    border: none;
+    transition: background 0.3s ease, box-shadow 0.3s ease, border 0.3s ease;
+}
+
+.league-table:not(.collapsed) {
+    background: #ffffff;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
     border: 1px solid rgba(102, 126, 234, 0.1);
 }
@@ -1777,8 +1784,8 @@ body {
     overflow-y: hidden;
     max-height: 0;
     opacity: 0;
-    transition: max-height 0.4s ease, opacity 0.3s ease, padding 0.3s ease;
-    background: white;
+    transition: max-height 0.4s ease, opacity 0.3s ease, padding 0.3s ease, background 0.3s ease;
+    background: transparent;
 }
 
 .league-table:not(.collapsed) .table-wrapper {
@@ -1786,6 +1793,7 @@ body {
     opacity: 1;
     padding: 15px 0;
     overflow-y: visible;
+    background: white;
 }
 
 .table-loading {

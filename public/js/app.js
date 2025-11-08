@@ -1539,26 +1539,37 @@ class StadiumsApp {
   }
 
   async loadStandings() {
+    console.log('🔄 Loading standings...');
     try {
       const response = await fetch('/api/standings');
+      console.log('📡 API response status:', response.status);
       if (!response.ok) {
         throw new Error('Failed to load standings');
       }
 
       const data = await response.json();
+      console.log('📊 Data received - Ligat Haal:', data.ligatHaal?.length, 'teams, Liga Leumit:', data.ligaLeumit?.length, 'teams');
       this.renderStandings('ligatHaalTable', data.ligatHaal, 'Ligat Ha\'al');
       this.renderStandings('ligaLeumitTable', data.ligaLeumit, 'Liga Leumit');
+      console.log('✅ Standings rendered');
     } catch (error) {
-      console.error('Error loading standings:', error);
+      console.error('❌ Error loading standings:', error);
       document.getElementById('ligatHaalTable').innerHTML = '<div class="table-loading">שגיאה בטעינת הנתונים</div>';
       document.getElementById('ligaLeumitTable').innerHTML = '<div class="table-loading">שגיאה בטעינת הנתונים</div>';
     }
   }
 
   renderStandings(containerId, standings, leagueName) {
+    console.log('🎨 Rendering standings for:', containerId, 'with', standings?.length, 'teams');
     const container = document.getElementById(containerId);
     
+    if (!container) {
+      console.error('❌ Container not found:', containerId);
+      return;
+    }
+    
     if (!standings || standings.length === 0) {
+      console.warn('⚠️ No standings data for:', containerId);
       container.innerHTML = '<div class="table-loading">אין נתונים זמינים</div>';
       return;
     }
@@ -1608,9 +1619,6 @@ class StadiumsApp {
     `;
 
     container.innerHTML = html;
-    
-    // Add click handlers to collapse/expand tables
-    this.attachTableToggleHandlers();
   }
 
   attachTableToggleHandlers() {
@@ -1618,9 +1626,12 @@ class StadiumsApp {
     document.addEventListener('click', (e) => {
       const title = e.target.closest('.league-table__title');
       if (title) {
+        console.log('Table title clicked:', title.textContent);
         const table = title.closest('.league-table');
         if (table) {
+          console.log('Toggling collapsed class. Current state:', table.classList.contains('collapsed'));
           table.classList.toggle('collapsed');
+          console.log('New state:', table.classList.contains('collapsed'));
         }
       }
     });
