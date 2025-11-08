@@ -1545,6 +1545,81 @@ class StadiumsApp {
       document.getElementById('ligatHaalTable').innerHTML = '<div class="table-loading">שגיאה בטעינת הנתונים</div>';
       document.getElementById('ligaLeumitTable').innerHTML = '<div class="table-loading">שגיאה בטעינת הנתונים</div>';
     }
+    
+    // Load fixtures after standings
+    this.loadFixtures();
+  }
+
+  async loadFixtures() {
+    console.log('🔄 Loading fixtures...');
+    try {
+      const response = await fetch('/api/fixtures');
+      if (!response.ok) {
+        throw new Error('Failed to load fixtures');
+      }
+
+      const data = await response.json();
+      console.log('⚽ Fixtures received - Ligat Haal:', data.ligatHaal?.length, 'matches, Liga Leumit:', data.ligaLeumit?.length, 'matches');
+      this.renderFixtures('ligatHaalFixtures', data.ligatHaal, 'ליגת העל');
+      this.renderFixtures('ligaLeumitFixtures', data.ligaLeumit, 'ליגה לאומית');
+      console.log('✅ Fixtures rendered');
+    } catch (error) {
+      console.error('❌ Error loading fixtures:', error);
+      document.getElementById('ligatHaalFixtures').innerHTML = '<div class="table-loading">שגיאה בטעינת המשחקים</div>';
+      document.getElementById('ligaLeumitFixtures').innerHTML = '<div class="table-loading">שגיאה בטעינת המשחקים</div>';
+    }
+  }
+
+  renderFixtures(containerId, fixtures, leagueName) {
+    console.log('🎨 Rendering fixtures for:', containerId, 'with', fixtures?.length, 'matches');
+    const container = document.getElementById(containerId);
+    
+    if (!container) {
+      console.error('❌ Container not found:', containerId);
+      return;
+    }
+    
+    if (!fixtures || fixtures.length === 0) {
+      console.warn('⚠️ No fixtures data for:', containerId);
+      container.innerHTML = '<div class="table-loading">אין משחקים קרובים</div>';
+      return;
+    }
+
+    const html = fixtures.slice(0, 10).map(match => {
+      const date = new Date(match.fixture.date);
+      const dateStr = date.toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      const timeStr = date.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+      const isLive = ['1H', '2H', 'HT', 'LIVE', 'ET', 'P', 'BT'].includes(match.fixture.status.short);
+      
+      return `
+        <div class="fixture-item ${isLive ? 'live' : ''}">
+          <div class="fixture-date">
+            <div class="date">${dateStr}</div>
+            <div class="time">${timeStr}</div>
+            ${isLive ? '<div class="live-badge">🔴 LIVE</div>' : ''}
+          </div>
+          <div class="fixture-teams">
+            <div class="fixture-team">
+              <img src="${match.teams.home.logo}" alt="${match.teams.home.name}" class="team-logo-small">
+              <span class="team-name">${match.teams.home.name}</span>
+            </div>
+            <div class="fixture-score">
+              ${isLive || match.goals.home !== null ? 
+                `<span class="score">${match.goals.home} - ${match.goals.away}</span>` : 
+                '<span class="vs">vs</span>'}
+              ${isLive ? `<div class="match-status">${match.fixture.status.elapsed}'</div>` : ''}
+            </div>
+            <div class="fixture-team">
+              <span class="team-name">${match.teams.away.name}</span>
+              <img src="${match.teams.away.logo}" alt="${match.teams.away.name}" class="team-logo-small">
+            </div>
+          </div>
+          <div class="fixture-venue">${match.fixture.venue.name}</div>
+        </div>
+      `;
+    }).join('');
+
+    container.innerHTML = html;
   }
 
   renderStandings(containerId, standings, leagueName) {

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Israeli Football Stadiums Database</title>
     <meta name="description" content="Comprehensive database of Israeli football stadiums with search functionality">
-    <link rel="stylesheet" href="css/styles.css?v=20">
+    <link rel="stylesheet" href="css/styles.css?v=21">
 </head>
 <body>
     <header class="header">
@@ -69,6 +69,25 @@
                 </div>
             </section>
 
+            <!-- Upcoming Fixtures Section -->
+            <section class="fixtures-section">
+                <h2 class="fixtures-title">משחקים קרובים</h2>
+                <div class="fixtures-container">
+                    <div class="league-fixtures collapsed">
+                        <h3 class="league-fixtures__title">ליגת העל</h3>
+                        <div id="ligatHaalFixtures" class="fixtures-wrapper">
+                            <div class="table-loading">טוען משחקים...</div>
+                        </div>
+                    </div>
+                    <div class="league-fixtures collapsed">
+                        <h3 class="league-fixtures__title">ליגה לאומית</h3>
+                        <div id="ligaLeumitFixtures" class="fixtures-wrapper">
+                            <div class="table-loading">טוען משחקים...</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <section class="results-section">
                 <div id="loading" class="loading hidden">
                     <div class="spinner"></div>
@@ -106,6 +125,6 @@
         </div>
     </div>
 
-    <script src="js/app.js?v=20"></script>
+    <script src="js/app.js?v=21"></script>
 </body>
 </html>

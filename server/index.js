@@ -506,15 +506,16 @@ app.get('/api/stadiums/:id/matches', async (req, res) => {
             
             const teamMatches = fetchedMatches
               .filter(match => {
-                const isTeamMatch = match.teams.home.id === teamId || match.teams.away.id === teamId;
+                // CRITICAL: Only show HOME matches for this team (stadium hosts home games)
+                const isHomeMatch = match.teams.home.id === teamId;
                 const isLive = ['1H', '2H', 'HT', 'LIVE', 'ET', 'P', 'BT'].includes(match.fixture.status.short);
                 const isUpcoming = match.fixture.timestamp > now;
                 const isFinished = ['FT', 'AET', 'PEN'].includes(match.fixture.status.short);
                 
-                const shouldInclude = isTeamMatch && (isLive || (isUpcoming && !isFinished));
-                console.log(`Match ${match.fixture.id}: ${match.teams.home.name} vs ${match.teams.away.name} - Status: ${match.fixture.status.short}, isLive: ${isLive}, isUpcoming: ${isUpcoming}, isFinished: ${isFinished}, isTeamMatch: ${isTeamMatch}, INCLUDE: ${shouldInclude}`);
+                const shouldInclude = isHomeMatch && (isLive || (isUpcoming && !isFinished));
+                console.log(`Match ${match.fixture.id}: ${match.teams.home.name} vs ${match.teams.away.name} - Status: ${match.fixture.status.short}, isHomeMatch: ${isHomeMatch}, isLive: ${isLive}, isUpcoming: ${isUpcoming}, INCLUDE: ${shouldInclude}`);
                 
-                // Include: LIVE matches (highest priority) OR upcoming matches (not finished)
+                // Include: LIVE home matches (highest priority) OR upcoming home matches (not finished)
                 return shouldInclude;
               })
               // Remove duplicates (same match might be in multiple calls)
@@ -606,11 +607,22 @@ app.get('/api/stadiums/:id/matches', async (req, res) => {
       upcomingMatches = allMatches.slice(0, 3);
     }
 
+    // Check if there's a live match at this stadium
+    const hasLiveMatch = upcomingMatches.some(match => 
+      ['1H', '2H', 'HT', 'LIVE', 'ET', 'P', 'BT'].includes(match.status.short)
+    );
+    
+    const liveMatch = hasLiveMatch ? upcomingMatches.find(match => 
+      ['1H', '2H', 'HT', 'LIVE', 'ET', 'P', 'BT'].includes(match.status.short)
+    ) : null;
+
     res.json({
       stadium: stadiumName,
       teams: allTeams,
       matches: upcomingMatches,
-      count: upcomingMatches.length
+      count: upcomingMatches.length,
+      hasLiveMatch,
+      liveMatch
     });
 
   } catch (error) {
@@ -646,6 +658,48 @@ app.get('/api/standings', async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching standings:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get all fixtures for both leagues (upcoming matches)
+app.get('/api/fixtures', async (req, res) => {
+  try {
+    const API_FOOTBALL_KEY = process.env.API_FOOTBALL_KEY;
+    const API_FOOTBALL_BASE_URL = 'https://v3.football.api-sports.io';
+    
+    console.log('Fetching fixtures for both Israeli leagues...');
+    
+    // Fetch next 20 matches from both leagues
+    const [ligatHaal, ligaLeumit] = await Promise.all([
+      axios.get(`${API_FOOTBALL_BASE_URL}/fixtures`, {
+        headers: { 'x-apisports-key': API_FOOTBALL_KEY },
+        params: { 
+          league: 383, // Ligat Ha'al
+          season: 2025,
+          next: 20,
+          timezone: 'Asia/Jerusalem'
+        }
+      }),
+      axios.get(`${API_FOOTBALL_BASE_URL}/fixtures`, {
+        headers: { 'x-apisports-key': API_FOOTBALL_KEY },
+        params: { 
+          league: 382, // Liga Leumit
+          season: 2025,
+          next: 20,
+          timezone: 'Asia/Jerusalem'
+        }
+      })
+    ]);
+
+    console.log(`Fetched ${ligatHaal.data.results} Ligat Ha'al fixtures, ${ligaLeumit.data.results} Liga Leumit fixtures`);
+
+    res.json({
+      ligatHaal: ligatHaal.data.response || [],
+      ligaLeumit: ligaLeumit.data.response || []
+    });
+  } catch (error) {
+    console.error('Error fetching fixtures:', error.message);
     res.status(500).json({ error: error.message });
   }
 });

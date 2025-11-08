@@ -1959,6 +1959,209 @@ body {
     font-weight: 700;
 }
 
+/* Fixtures Section */
+.fixtures-section {
+    padding: 60px 20px;
+    background: transparent;
+}
+
+.fixtures-title {
+    text-align: center;
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 40px;
+    direction: rtl;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.fixtures-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+    gap: 20px;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 15px;
+}
+
+.league-fixtures {
+    background: transparent;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: none;
+    border: none;
+    transition: background 0.3s ease, box-shadow 0.3s ease, border 0.3s ease;
+}
+
+.league-fixtures:not(.collapsed) {
+    background: #ffffff;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(102, 126, 234, 0.1);
+}
+
+.league-fixtures__title {
+    font-size: 18px;
+    font-weight: 700;
+    padding: 16px 20px;
+    margin: 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    text-align: center;
+    direction: rtl;
+    letter-spacing: 0.3px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.2s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+.league-fixtures__title:hover {
+    background: linear-gradient(135deg, #5568d3 0%, #653a8b 100%);
+}
+
+.league-fixtures__title::after {
+    content: '▼';
+    font-size: 14px;
+    transition: transform 0.3s ease;
+}
+
+.league-fixtures.collapsed .league-fixtures__title::after {
+    transform: rotate(-90deg);
+}
+
+.fixtures-wrapper {
+    padding: 0;
+    direction: rtl;
+    overflow-x: auto;
+    overflow-y: hidden;
+    max-height: 0;
+    opacity: 0;
+    transition: max-height 0.4s ease, opacity 0.3s ease, padding 0.3s ease, background 0.3s ease;
+    background: transparent;
+}
+
+.league-fixtures:not(.collapsed) .fixtures-wrapper {
+    max-height: 3000px;
+    opacity: 1;
+    padding: 15px;
+    overflow-y: visible;
+    background: white;
+}
+
+.fixture-item {
+    padding: 16px;
+    margin-bottom: 12px;
+    background: #f9fafb;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    transition: all 0.2s ease;
+}
+
+.fixture-item:hover {
+    background: #f3f4f6;
+    border-color: #667eea;
+    transform: translateX(-2px);
+}
+
+.fixture-item.live {
+    background: linear-gradient(135deg, #fef3f2 0%, #fee2e2 100%);
+    border-color: #ef4444;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.9; }
+}
+
+.fixture-date {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    font-size: 13px;
+    color: #6b7280;
+}
+
+.live-badge {
+    background: #ef4444;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.fixture-teams {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 8px;
+}
+
+.fixture-team {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
+}
+
+.team-logo-small {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.team-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1f2937;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.fixture-score {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #1f2937;
+    min-width: 60px;
+}
+
+.fixture-score .vs {
+    font-size: 14px;
+    font-weight: 500;
+    color: #9ca3af;
+}
+
+.match-status {
+    font-size: 11px;
+    color: #ef4444;
+    font-weight: 600;
+}
+
+.fixture-venue {
+    text-align: center;
+    font-size: 12px;
+    color: #9ca3af;
+    padding-top: 8px;
+    border-top: 1px solid #e5e7eb;
+}
+
 @media (max-width: 1300px) {
     .standings-container {
         grid-template-columns: 1fr;
