@@ -39,8 +39,7 @@ read_excel.py
 *-working.js
 *-simple.js
 
-# Database
-database/*.db
+# Database - only ignore journal files
 database/*.db-journal
 
 # Deployment instructions
