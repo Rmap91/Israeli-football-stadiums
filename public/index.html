@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Israeli Football Stadiums Database</title>
+    <meta name="description" content="Comprehensive database of Israeli football stadiums with search functionality">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <h1 class="header__title">Israeli Football Stadiums</h1>
+            <p class="header__subtitle">Comprehensive Database of Football Stadiums in Israel</p>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="container">
+            <section class="search-section">
+                <div class="search-container">
+                    <input 
+                        type="text" 
+                        id="searchInput" 
+                        class="search-input" 
+                        placeholder="Search stadiums by name or city..."
+                        autocomplete="off"
+                    >
+                    <button id="searchBtn" class="search-btn" aria-label="Search">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.35-4.35"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div id="searchSuggestions" class="search-suggestions hidden"></div>
+            </section>
+
+            <section class="sort-section">
+                <div class="sort-container">
+                    <label for="sortSelect" class="sort-label">מיון:</label>
+                    <select id="sortSelect" class="sort-select">
+                        <option value="name-asc">א-ת (שם)</option>
+                        <option value="name-desc">ת-א (שם)</option>
+                        <option value="location-south">דרום לצפון</option>
+                        <option value="location-north">צפון לדרום</option>
+                        <option value="capacity-desc">קיבולת (גבוהה לנמוכה)</option>
+                        <option value="capacity-asc">קיבולת (נמוכה לגבוהה)</option>
+                    </select>
+                </div>
+            </section>
+
+            <section class="results-section">
+                <div id="loading" class="loading hidden">
+                    <div class="spinner"></div>
+                    <p>Loading stadiums...</p>
+                </div>
+                
+                <div id="errorMessage" class="error-message hidden">
+                    <p>Unable to load stadiums. Please try again later.</p>
+                </div>
+
+                <div id="resultsCount" class="results-count hidden">
+                    <span id="countText">0 stadiums found</span>
+                </div>
+
+                <div id="stadiumsGrid" class="stadiums-grid">
+                    <!-- Stadium cards will be inserted here -->
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 Israeli Football Stadiums Database. Educational project.</p>
+        </div>
+    </footer>
+
+    <!-- Stadium Detail Modal -->
+    <div id="stadiumModal" class="modal hidden">
+        <div class="modal-content">
+            <button id="closeModal" class="modal-close" aria-label="Close">×</button>
+            <div id="modalContent">
+                <!-- Stadium details will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js?v=17"></script>
+</body>
+</html>

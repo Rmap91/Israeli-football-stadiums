@@ -1,0 +1,47 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Dependencies
+node_modules/
+
+# Environment variables
+.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
+*.temp
+update-stadium-*.js
+deploy.zip
+deploy*.zip
+
+# Test files
+test-*.js
+check-*.js
+find-*.js
+fix-*.js
+excel_reader.js
+read_excel.py
+*.xlsx
+
+# Backup files
+*-backup.js
+*-broken.js
+*-working.js
+*-simple.js
+
+# Database
+database/*.db
+database/*.db-journal
+
+# Deployment instructions
+deploy-to-kudu.txt

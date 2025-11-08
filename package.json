@@ -1,0 +1,46 @@
+{
+  "name": "israeli-stadiums-database",
+  "version": "1.0.0",
+  "description": "Comprehensive database of Israeli football stadiums with search functionality",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node server/index.js",
+    "build": "npm install",
+    "postinstall": "echo 'Installation complete'",
+    "azure-postbuild": "echo 'Azure build complete'",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "football",
+    "stadiums",
+    "israel",
+    "database",
+    "search"
+  ],
+  "author": "Ram",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=10.0.0"
+  },
+  "dependencies": {
+    "axios": "^1.13.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.1.5",
+    "helmet": "^7.1.0",
+    "node-cache": "^5.1.2",
+    "sqlite3": "^5.1.6",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/username/israeli-stadiums-database"
+  },
+  "homepage": "https://israeli-stadiums.azurewebsites.net"
+}

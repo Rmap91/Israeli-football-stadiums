@@ -1,0 +1,50 @@
+name: Deploy Israeli Stadiums Database to Azure
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  AZURE_WEBAPP_NAME: israeli-stadiums-app    # set this to your application's name
+  AZURE_WEBAPP_PACKAGE_PATH: '.'            # set this to the path to your web app project, defaults to the repository root
+  NODE_VERSION: '18.x'                       # set this to the node version to use
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 🛒 Checkout code
+      uses: actions/checkout@v3
+
+    - name: 🟢 Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: 📦 Install dependencies
+      run: npm ci
+
+    - name: 🏗️ Build application
+      run: npm run build
+
+    - name: 📁 Create deployment artifact
+      run: |
+        # Create deployment package excluding unnecessary files
+        mkdir -p deployment
+        cp -r server public package*.json Book1.xlsx deployment/
+        cd deployment
+        zip -r ../deployment.zip . -x "*.git*" "node_modules/*" "*.env*"
+        cd ..
+
+    - name: 🚀 Deploy to Azure Web App
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: ${{ env.AZURE_WEBAPP_NAME }}
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        package: './deployment.zip'
+
+    - name: 🎉 Deployment notification
+      run: echo "🏟️ Israeli Stadiums Database deployed successfully to Azure!"
