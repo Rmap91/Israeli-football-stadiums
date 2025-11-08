@@ -739,26 +739,44 @@ class StadiumsApp {
         const daysUntil = Math.round((matchDay - today) / (1000 * 60 * 60 * 24));
         const daysText = daysUntil === 0 ? 'היום' : daysUntil === 1 ? 'מחר' : `בעוד ${daysUntil} ימים`;
 
+        // Check if match is live or has live data
+        const isLive = match.status?.short === 'LIVE' || match.status?.short === '1H' || match.status?.short === '2H' || match.status?.short === 'HT';
+        const hasScore = match.goals && (match.goals.home !== null || match.goals.away !== null);
+        
         return `
-          <div class="match-card upcoming">
+          <div class="match-card ${isLive ? 'live' : 'upcoming'}" data-match-id="${match.id}">
             <div class="match-header">
               <span class="match-league">${match.league.name}</span>
-              <span class="match-status status-upcoming">${daysText}</span>
+              ${isLive ? 
+                `<span class="match-status status-live">🔴 ${match.status.elapsed || 0}'</span>` :
+                `<span class="match-status status-upcoming">${daysText}</span>`
+              }
             </div>
             <div class="match-teams">
               <div class="match-team home">
                 <img src="${match.home.logo}" alt="${match.home.name}" class="team-logo">
                 <span class="team-name">${match.home.name}</span>
               </div>
-              <div class="match-vs">VS</div>
+              <div class="match-score">
+                ${hasScore ? 
+                  `<span class="score">${match.goals.home || 0} - ${match.goals.away || 0}</span>` :
+                  `<span class="match-vs">VS</span>`
+                }
+              </div>
               <div class="match-team away">
                 <span class="team-name">${match.away.name}</span>
                 <img src="${match.away.logo}" alt="${match.away.name}" class="team-logo">
               </div>
             </div>
+            ${this.renderMatchEvents(match)}
             <div class="match-info">
               <span class="match-date">📅 ${dateStr}</span>
               <span class="match-time">🕐 ${timeStr}</span>
+            </div>
+            <div class="match-actions">
+              <button class="btn-add-calendar" onclick="app.addToCalendar(${match.id}, '${match.home.name}', '${match.away.name}', '${match.date}', '${match.venue?.name || ''}')" title="הוסף ליומן">
+                📅 הוסף ליומן
+              </button>
             </div>
           </div>
         `;
@@ -810,6 +828,98 @@ class StadiumsApp {
 
     console.log(`Filtered ${filteredMatches.length} matches`);
     this.renderMatches(stadiumId, filteredMatches);
+  }
+
+  renderMatchEvents(match) {
+    // Check if match has live events (goals, cards, etc.)
+    if (!match.events || match.events.length === 0) {
+      return '';
+    }
+
+    const events = match.events
+      .filter(event => ['Goal', 'Card'].includes(event.type))
+      .slice(0, 5) // Show max 5 events
+      .map(event => {
+        const icon = event.type === 'Goal' ? '⚽' : (event.detail === 'Red Card' ? '🟥' : '🟨');
+        const time = event.time?.elapsed || '';
+        return `<span class="match-event">${icon} ${event.player?.name || ''} ${time}'</span>`;
+      })
+      .join('');
+
+    return events ? `<div class="match-events">${events}</div>` : '';
+  }
+
+  addToCalendar(matchId, homeTeam, awayTeam, dateStr, venue) {
+    // Create ICS calendar file
+    const matchDate = new Date(dateStr);
+    const endDate = new Date(matchDate.getTime() + (2 * 60 * 60 * 1000)); // 2 hours duration
+
+    const formatDate = (date) => {
+      return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+    };
+
+    const title = `${homeTeam} נגד ${awayTeam}`;
+    const location = venue || 'אצטדיון';
+    const description = `משחק כדורגל: ${homeTeam} מארח את ${awayTeam}`;
+
+    const icsContent = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//Israeli Football Stadiums//Stadium App//HE',
+      'BEGIN:VEVENT',
+      `UID:match-${matchId}@fanstadiums.com`,
+      `DTSTAMP:${formatDate(new Date())}`,
+      `DTSTART:${formatDate(matchDate)}`,
+      `DTEND:${formatDate(endDate)}`,
+      `SUMMARY:${title}`,
+      `DESCRIPTION:${description}`,
+      `LOCATION:${location}`,
+      'STATUS:CONFIRMED',
+      'BEGIN:VALARM',
+      'TRIGGER:-PT1H',
+      'DESCRIPTION:תזכורת למשחק',
+      'ACTION:DISPLAY',
+      'END:VALARM',
+      'END:VEVENT',
+      'END:VCALENDAR'
+    ].join('\r\n');
+
+    // Create download link
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `match-${homeTeam}-vs-${awayTeam}.ics`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    // Show success message
+    this.showMessage('✓ הקובץ הורד! פתח אותו כדי להוסיף את המשחק ליומן', 'success');
+  }
+
+  showMessage(message, type = 'info') {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `app-message ${type}`;
+    messageDiv.textContent = message;
+    messageDiv.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: ${type === 'success' ? '#4caf50' : '#2196F3'};
+      color: white;
+      padding: 15px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      z-index: 10000;
+      animation: slideIn 0.3s ease-out;
+    `;
+    document.body.appendChild(messageDiv);
+    setTimeout(() => {
+      messageDiv.style.animation = 'slideOut 0.3s ease-out';
+      setTimeout(() => messageDiv.remove(), 300);
+    }, 3000);
   }
 
   clearTeamFilter(stadiumId) {

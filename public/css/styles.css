@@ -445,6 +445,28 @@ body {
   }
 }
 
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
 .modal-content {
   background: var(--bg-white);
   border-radius: var(--border-radius-lg);
@@ -1500,6 +1522,17 @@ body {
     color: #3c763d;
 }
 
+.status-live {
+    background: #ff4444;
+    color: white;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
 .match-round {
     font-size: 12px;
     color: var(--text-light);
@@ -1552,6 +1585,75 @@ body {
     padding: 8px 16px;
     background: var(--bg-gray);
     border-radius: 8px;
+}
+
+.match-score {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.match-score .score {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--primary-color);
+    padding: 8px 20px;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.match-card.live {
+    border-color: #ff4444;
+    box-shadow: 0 0 20px rgba(255, 68, 68, 0.3);
+}
+
+.match-events {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 12px 0;
+    padding: 12px;
+    background: var(--bg-gray);
+    border-radius: 8px;
+}
+
+.match-event {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    padding: 4px 8px;
+    background: white;
+    border-radius: 6px;
+    color: var(--text-color);
+}
+
+.match-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--bg-gray);
+}
+
+.btn-add-calendar {
+    background: linear-gradient(135deg, var(--accent-color), var(--secondary-color));
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    transition: var(--transition);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.btn-add-calendar:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 
 .match-info {
