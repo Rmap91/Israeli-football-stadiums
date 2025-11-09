@@ -12,6 +12,26 @@ const PORT = process.env.PORT || 3000;
 const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
 const GOOGLE_PLACES_BASE_URL = 'https://places.googleapis.com/v1/places:searchNearby';
 
+// Venue name mapping - API venue names to DB stadium names
+const VENUE_NAME_MAP = {
+  'Bloomfield Stadium': 'בלומפילד',
+  'Turner Stadium': 'טרנר',
+  'Sammy Ofer Stadium': 'סמי עופר',
+  'Teddy Stadium': 'טדי',
+  'HaMoshava Stadium': 'המושבה',
+  'Netanya Stadium': 'נתניה',
+  'Green Stadium': 'אצטדיון העירוני באשדוד',
+  'Toto Turner Stadium': 'טרנר',
+  'Municipal Stadium': 'העירוני',
+  'Doha Stadium': 'אצטדיון דוחה',
+  'Lod Municipal Stadium': 'הלאומי העירוני בלוד',
+  'Haberfeld Stadium': 'העירוני פתח תקווה',
+  'Hatikva Neighborhood Stadium': 'אצטדיון שכונת התקווה',
+  'BashaR Afula - Ilut Stadium': 'באשר עפולה',
+  'Bat Yam Municipal Stadium': 'האצטדיון העירוני בת-ים',
+  'Kiryat Eliezer Stadium': 'קרית אליעזר'
+};
+
 // Simple middleware
 app.use(cors());
 app.use(express.json());
@@ -668,16 +688,25 @@ app.get('/api/fixtures', async (req, res) => {
     const API_FOOTBALL_KEY = process.env.API_FOOTBALL_KEY;
     const API_FOOTBALL_BASE_URL = 'https://v3.football.api-sports.io';
     
-    console.log('Fetching fixtures for both Israeli leagues...');
+    console.log('Fetching fixtures for both Israeli leagues (past and upcoming)...');
     
-    // Fetch next 20 matches from both leagues
-    const [ligatHaal, ligaLeumit] = await Promise.all([
+    // Fetch last 50 and next 50 matches from both leagues to get complete matchweeks
+    const [ligatHaalLast, ligatHaalNext, ligaLeumitLast, ligaLeumitNext] = await Promise.all([
       axios.get(`${API_FOOTBALL_BASE_URL}/fixtures`, {
         headers: { 'x-apisports-key': API_FOOTBALL_KEY },
         params: { 
           league: 383, // Ligat Ha'al
           season: 2025,
-          next: 20,
+          last: 50,
+          timezone: 'Asia/Jerusalem'
+        }
+      }),
+      axios.get(`${API_FOOTBALL_BASE_URL}/fixtures`, {
+        headers: { 'x-apisports-key': API_FOOTBALL_KEY },
+        params: { 
+          league: 383, // Ligat Ha'al
+          season: 2025,
+          next: 50,
           timezone: 'Asia/Jerusalem'
         }
       }),
@@ -686,22 +715,80 @@ app.get('/api/fixtures', async (req, res) => {
         params: { 
           league: 382, // Liga Leumit
           season: 2025,
-          next: 20,
+          last: 50,
+          timezone: 'Asia/Jerusalem'
+        }
+      }),
+      axios.get(`${API_FOOTBALL_BASE_URL}/fixtures`, {
+        headers: { 'x-apisports-key': API_FOOTBALL_KEY },
+        params: { 
+          league: 382, // Liga Leumit
+          season: 2025,
+          next: 50,
           timezone: 'Asia/Jerusalem'
         }
       })
     ]);
 
-    console.log(`Fetched ${ligatHaal.data.results} Ligat Ha'al fixtures, ${ligaLeumit.data.results} Liga Leumit fixtures`);
+    // Combine last and next matches, remove duplicates
+    const ligatHaalAll = [...(ligatHaalLast.data.response || []), ...(ligatHaalNext.data.response || [])];
+    const ligaLeumitAll = [...(ligaLeumitLast.data.response || []), ...(ligaLeumitNext.data.response || [])];
+    
+    // Remove duplicates by fixture ID
+    const uniqueLigatHaal = Array.from(new Map(ligatHaalAll.map(f => [f.fixture.id, f])).values());
+    const uniqueLigaLeumit = Array.from(new Map(ligaLeumitAll.map(f => [f.fixture.id, f])).values());
+
+    console.log(`Fetched ${uniqueLigatHaal.length} Ligat Ha'al fixtures, ${uniqueLigaLeumit.length} Liga Leumit fixtures`);
+    
+    // Debug: Check if first finished match has events
+    const finishedMatch = uniqueLigatHaal.find(f => f.fixture.status.short === 'FT');
+    if (finishedMatch) {
+      console.log('Sample finished match has events:', !!finishedMatch.events, 'Events count:', finishedMatch.events?.length || 0);
+    }
 
     res.json({
-      ligatHaal: ligatHaal.data.response || [],
-      ligaLeumit: ligaLeumit.data.response || []
+      ligatHaal: uniqueLigatHaal,
+      ligaLeumit: uniqueLigaLeumit
     });
   } catch (error) {
     console.error('Error fetching fixtures:', error.message);
     res.status(500).json({ error: error.message });
   }
+});
+
+// Get detailed fixture info with events
+app.get('/api/fixture/:id', async (req, res) => {
+  try {
+    const API_FOOTBALL_KEY = process.env.API_FOOTBALL_KEY;
+    const API_FOOTBALL_BASE_URL = 'https://v3.football.api-sports.io';
+    const fixtureId = req.params.id;
+    
+    console.log(`Fetching detailed fixture ${fixtureId} with events...`);
+    
+    const response = await axios.get(`${API_FOOTBALL_BASE_URL}/fixtures`, {
+      headers: { 'x-apisports-key': API_FOOTBALL_KEY },
+      params: { 
+        id: fixtureId,
+        timezone: 'Asia/Jerusalem'
+      }
+    });
+
+    const fixture = response.data.response?.[0];
+    if (fixture) {
+      console.log(`Fixture ${fixtureId} has ${fixture.events?.length || 0} events`);
+      res.json(fixture);
+    } else {
+      res.status(404).json({ error: 'Fixture not found' });
+    }
+  } catch (error) {
+    console.error('Error fetching fixture details:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get venue name mapping
+app.get('/api/venue-map', (req, res) => {
+  res.json(VENUE_NAME_MAP);
 });
 
 // Health check

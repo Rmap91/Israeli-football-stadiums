@@ -817,6 +817,52 @@ body {
     direction: rtl;
 }
 
+/* Collapsible Section Styling */
+.collapsible-section {
+    margin-top: 20px;
+}
+
+.collapsible-title {
+    font-size: 1.3rem;
+    color: var(--primary-color);
+    margin-bottom: 15px;
+    text-align: right;
+    direction: rtl;
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: color 0.3s ease;
+}
+
+.collapsible-title:hover {
+    color: var(--secondary-color);
+}
+
+.collapsible-title::after {
+    content: '▼';
+    font-size: 0.9em;
+    transition: transform 0.3s ease;
+    margin-left: auto;
+}
+
+.collapsible-title.collapsed::after {
+    transform: rotate(-90deg);
+}
+
+.collapsible-content {
+    max-height: 1000px;
+    overflow: hidden;
+    transition: max-height 0.4s ease, opacity 0.3s ease;
+    opacity: 1;
+}
+
+.collapsible-content.collapsed {
+    max-height: 0;
+    opacity: 0;
+}
+
 .sort-controls {
     display: flex;
     align-items: center;
@@ -1724,24 +1770,66 @@ body {
     }
 }
 
-/* League Standings Section */
-.standings-section {
+/* League Info Section with Tabs */
+.league-info-section {
     margin: 0 0 50px;
-    padding: 0;
+    padding: 60px 20px;
     background: transparent;
 }
 
-.standings-title {
+.league-info-title {
     font-size: 32px;
     font-weight: 800;
     color: var(--text-primary);
     text-align: center;
-    margin: 50px 0 40px;
+    margin: 0 0 30px;
     direction: rtl;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+}
+
+.league-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 0 auto 40px;
+    max-width: 500px;
+    direction: rtl;
+}
+
+.league-tab {
+    flex: 1;
+    padding: 14px 24px;
+    background: #f3f4f6;
+    border: 2px solid transparent;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.league-tab:hover {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.league-tab.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: transparent;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.league-tab-content {
+    display: none;
+}
+
+.league-tab-content.active {
+    display: block;
 }
 
 .standings-container {
@@ -2061,12 +2149,14 @@ body {
     border-radius: 8px;
     border: 1px solid #e5e7eb;
     transition: all 0.2s ease;
+    cursor: pointer;
 }
 
 .fixture-item:hover {
     background: #f3f4f6;
     border-color: #667eea;
     transform: translateX(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
 }
 
 .fixture-item.live {
@@ -2080,13 +2170,29 @@ body {
     50% { opacity: 0.9; }
 }
 
-.fixture-date {
+.fixture-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 12px;
+}
+
+.fixture-date {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     font-size: 13px;
     color: #6b7280;
+}
+
+.fixture-matchday {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    direction: rtl;
 }
 
 .live-badge {
@@ -2160,6 +2266,109 @@ body {
     color: #9ca3af;
     padding-top: 8px;
     border-top: 1px solid #e5e7eb;
+}
+
+.fixture-scorers {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 8px 8px;
+    margin-top: 8px;
+    background: #f9fafb;
+    border-radius: 6px;
+    font-size: 11px;
+    color: #6b7280;
+    direction: ltr;
+}
+
+.scorer-side {
+    flex: 1;
+    padding: 0 8px;
+}
+
+.scorer-side.home {
+    text-align: right;
+}
+
+.scorer-side.away {
+    text-align: left;
+}
+
+.scorer-divider {
+    font-size: 14px;
+    color: #10b981;
+    padding: 0 8px;
+}
+
+.finished-badge {
+    background: #10b981;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.match-minute {
+    color: #ef4444;
+    font-weight: 700;
+    font-size: 13px;
+}
+
+/* Matchweek Navigation */
+.matchweek-navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    margin-bottom: 20px;
+    direction: rtl;
+}
+
+.matchweek-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: white;
+    text-align: center;
+    flex: 1;
+}
+
+.matchweek-nav-btn {
+    padding: 10px 20px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.matchweek-nav-btn:hover:not(.disabled) {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: scale(1.05);
+}
+
+.matchweek-nav-btn.disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.matchweek-fixtures {
+    margin-top: 0;
+}
+
+.fixture-item.finished {
+    opacity: 0.85;
+}
+
+.fixture-item.finished:hover {
+    opacity: 1;
 }
 
 @media (max-width: 1300px) {

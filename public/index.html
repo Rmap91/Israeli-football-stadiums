@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Israeli Football Stadiums Database</title>
     <meta name="description" content="Comprehensive database of Israeli football stadiums with search functionality">
-    <link rel="stylesheet" href="css/styles.css?v=21">
+    <link rel="stylesheet" href="css/styles.css?v=25">
 </head>
 <body>
     <header class="header">
@@ -50,39 +50,48 @@
                 </div>
             </section>
 
-            <!-- League Standings Section -->
-            <section class="standings-section">
-                <h2 class="standings-title">טבלאות ליגה</h2>
-                <div class="standings-container">
-                    <div class="league-table collapsed">
-                        <h3 class="league-table__title">ליגת העל</h3>
-                        <div id="ligatHaalTable" class="table-wrapper">
-                            <div class="table-loading">טוען נתונים...</div>
+            <!-- League Info Section with Tabs -->
+            <section class="league-info-section">
+                <h2 class="league-info-title">מידע ליגות</h2>
+                
+                <!-- Tab Navigation -->
+                <div class="league-tabs">
+                    <button class="league-tab active" data-tab="standings">טבלאות</button>
+                    <button class="league-tab" data-tab="fixtures">משחקים קרובים</button>
+                </div>
+
+                <!-- Standings Tab Content -->
+                <div class="league-tab-content active" id="standings-content">
+                    <div class="standings-container">
+                        <div class="league-table collapsed">
+                            <h3 class="league-table__title">ליגת העל</h3>
+                            <div id="ligatHaalTable" class="table-wrapper">
+                                <div class="table-loading">טוען נתונים...</div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="league-table collapsed">
-                        <h3 class="league-table__title">ליגה לאומית</h3>
-                        <div id="ligaLeumitTable" class="table-wrapper">
-                            <div class="table-loading">טוען נתונים...</div>
+                        <div class="league-table collapsed">
+                            <h3 class="league-table__title">ליגה לאומית</h3>
+                            <div id="ligaLeumitTable" class="table-wrapper">
+                                <div class="table-loading">טוען נתונים...</div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </section>
 
-            <!-- Upcoming Fixtures Section -->
-            <section class="fixtures-section">
-                <h2 class="fixtures-title">משחקים קרובים</h2>
-                <div class="fixtures-container">
-                    <div class="league-fixtures collapsed">
-                        <h3 class="league-fixtures__title">ליגת העל</h3>
-                        <div id="ligatHaalFixtures" class="fixtures-wrapper">
-                            <div class="table-loading">טוען משחקים...</div>
+                <!-- Fixtures Tab Content -->
+                <div class="league-tab-content" id="fixtures-content">
+                    <div class="fixtures-container">
+                        <div class="league-fixtures collapsed">
+                            <h3 class="league-fixtures__title">ליגת העל</h3>
+                            <div id="ligatHaalFixtures" class="fixtures-wrapper">
+                                <div class="table-loading">טוען משחקים...</div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="league-fixtures collapsed">
-                        <h3 class="league-fixtures__title">ליגה לאומית</h3>
-                        <div id="ligaLeumitFixtures" class="fixtures-wrapper">
-                            <div class="table-loading">טוען משחקים...</div>
+                        <div class="league-fixtures collapsed">
+                            <h3 class="league-fixtures__title">ליגה לאומית</h3>
+                            <div id="ligaLeumitFixtures" class="fixtures-wrapper">
+                                <div class="table-loading">טוען משחקים...</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -125,6 +134,6 @@
         </div>
     </div>
 
-    <script src="js/app.js?v=21"></script>
+    <script src="js/app.js?v=30"></script>
 </body>
 </html>

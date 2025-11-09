@@ -608,20 +608,22 @@ class StadiumsApp {
             🔄 רענן נתונים מ-Google Places
           </button>
           
-          <div class="parking-section">
-            <h3>🅿️ חניות בסביבה</h3>
-            <div id="nearby-parking" class="nearby-places">
+          <div class="parking-section collapsible-section">
+            <h3 class="collapsible-title collapsed">🅿️ חניות בסביבה</h3>
+            <div class="collapsible-content collapsed" id="nearby-parking">
               <div class="loading-spinner">טוען חניות מ-Google Places...</div>
             </div>
           </div>
           
-          <div class="transit-section" style="margin-top: 30px;">
-            <h3>🚌 תחבורה ציבורית</h3>
-            <button class="action-btn secondary" onclick="window.stadiumsApp.loadTransitInfo(${stadiumId})" style="margin-bottom: 15px;">
-              טען תחנות אוטובוס ורכבת
-            </button>
-            <div id="transit-info-parking" class="nearby-places">
-              <div class="no-data">לחץ על הכפתור לקבלת מידע על תחנות אוטובוס ורכבת בקרבת מקום</div>
+          <div class="transit-section collapsible-section" style="margin-top: 30px;">
+            <h3 class="collapsible-title collapsed">🚌 תחבורה ציבורית</h3>
+            <div class="collapsible-content collapsed">
+              <button class="action-btn secondary" onclick="window.stadiumsApp.loadTransitInfo(${stadiumId})" style="margin-bottom: 15px;">
+                טען תחנות אוטובוס ורכבת
+              </button>
+              <div id="transit-info-parking" class="nearby-places">
+                <div class="no-data">לחץ על הכפתור לקבלת מידע על תחנות אוטובוס ורכבת בקרבת מקום</div>
+              </div>
             </div>
           </div>
         </div>
@@ -1501,6 +1503,46 @@ class StadiumsApp {
     }, 100);
   }
 
+  openStadiumByVenue(venueName) {
+    console.log('Opening stadium by venue:', venueName);
+    
+    // First try to map the venue name using our mapping
+    let searchName = venueName;
+    if (this.venueNameMap && this.venueNameMap[venueName]) {
+      searchName = this.venueNameMap[venueName];
+      console.log('Mapped venue name:', venueName, '→', searchName);
+    }
+    
+    // Find the stadium that matches this venue name
+    const stadium = this.allStadiums.find(s => {
+      // Try exact match with mapped name first
+      if (s.name === searchName || s.name_en === searchName) return true;
+      
+      // Try exact match with original venue name
+      if (s.name === venueName || s.name_en === venueName) return true;
+      
+      // Try partial match with mapped name
+      const nameMatch = s.name.includes(searchName) || searchName.includes(s.name);
+      const enNameMatch = s.name_en && (s.name_en.includes(searchName) || searchName.includes(s.name_en));
+      
+      // Try partial match with original venue name
+      const origNameMatch = s.name.includes(venueName) || venueName.includes(s.name);
+      const origEnNameMatch = s.name_en && (s.name_en.includes(venueName) || venueName.includes(s.name_en));
+      
+      return nameMatch || enNameMatch || origNameMatch || origEnNameMatch;
+    });
+
+    if (stadium) {
+      console.log('✓ Found stadium:', stadium.name);
+      this.renderEnhancedStadiumModal(stadium, stadium.id);
+    } else {
+      console.warn('✗ Stadium not found for venue:', venueName);
+      console.log('Available stadiums:', this.allStadiums.map(s => s.name).join(', '));
+      // Show a message to the user
+      alert(`לא נמצא אצטדיון עבור: ${venueName}`);
+    }
+  }
+
   hideModal() {
     this.elements.stadiumModal.classList.add('hidden');
     document.body.style.overflow = 'auto';
@@ -1550,9 +1592,40 @@ class StadiumsApp {
     this.loadFixtures();
   }
 
+  async enrichFixturesWithEvents(fixtures) {
+    // Get only finished matches
+    const finishedMatches = fixtures.filter(f => 
+      ['FT', 'AET', 'PEN'].includes(f.fixture.status.short)
+    );
+    
+    console.log(`🔍 Enriching ${finishedMatches.length} finished matches with event data...`);
+    
+    // Fetch detailed info for each finished match (limit to avoid too many requests)
+    const detailPromises = finishedMatches.slice(0, 20).map(async (match) => {
+      try {
+        const response = await fetch(`/api/fixture/${match.fixture.id}`);
+        if (response.ok) {
+          const detailed = await response.json();
+          // Copy events to the original match object
+          match.events = detailed.events || [];
+          console.log(`✓ Match ${match.fixture.id}: ${detailed.events?.length || 0} events`);
+        }
+      } catch (error) {
+        console.error(`Error loading events for match ${match.fixture.id}:`, error);
+      }
+    });
+    
+    await Promise.all(detailPromises);
+  }
+
   async loadFixtures() {
     console.log('🔄 Loading fixtures...');
     try {
+      // Load venue name mapping first
+      const venueMapResponse = await fetch('/api/venue-map');
+      this.venueNameMap = await venueMapResponse.json();
+      console.log('📍 Venue name map loaded:', Object.keys(this.venueNameMap).length, 'venues');
+      
       const response = await fetch('/api/fixtures');
       if (!response.ok) {
         throw new Error('Failed to load fixtures');
@@ -1560,14 +1633,238 @@ class StadiumsApp {
 
       const data = await response.json();
       console.log('⚽ Fixtures received - Ligat Haal:', data.ligatHaal?.length, 'matches, Liga Leumit:', data.ligaLeumit?.length, 'matches');
-      this.renderFixtures('ligatHaalFixtures', data.ligatHaal, 'ליגת העל');
-      this.renderFixtures('ligaLeumitFixtures', data.ligaLeumit, 'ליגה לאומית');
+      
+      // Fetch detailed info for finished matches to get events
+      await this.enrichFixturesWithEvents(data.ligatHaal);
+      await this.enrichFixturesWithEvents(data.ligaLeumit);
+      
+      // Store fixtures data for navigation
+      this.fixturesData = {
+        ligatHaal: data.ligatHaal || [],
+        ligaLeumit: data.ligaLeumit || []
+      };
+      
+      // Render with matchweek navigation
+      this.renderFixturesWithNavigation('ligatHaalFixtures', this.fixturesData.ligatHaal, 'ליגת העל', 'ligatHaal');
+      this.renderFixturesWithNavigation('ligaLeumitFixtures', this.fixturesData.ligaLeumit, 'ליגה לאומית', 'ligaLeumit');
       console.log('✅ Fixtures rendered');
     } catch (error) {
       console.error('❌ Error loading fixtures:', error);
       document.getElementById('ligatHaalFixtures').innerHTML = '<div class="table-loading">שגיאה בטעינת המשחקים</div>';
       document.getElementById('ligaLeumitFixtures').innerHTML = '<div class="table-loading">שגיאה בטעינת המשחקים</div>';
     }
+  }
+
+  renderFixturesWithNavigation(containerId, fixtures, leagueName, leagueKey) {
+    const container = document.getElementById(containerId);
+    if (!container) {
+      console.error('❌ Container not found:', containerId);
+      return;
+    }
+    
+    if (!fixtures || fixtures.length === 0) {
+      console.warn('⚠️ No fixtures data for:', containerId);
+      container.innerHTML = '<div class="table-loading">אין משחקים קרובים</div>';
+      return;
+    }
+
+    // Group fixtures by matchweek
+    const matchweekGroups = {};
+    fixtures.forEach(match => {
+      const round = match.league.round || 'N/A';
+      if (!matchweekGroups[round]) {
+        matchweekGroups[round] = [];
+      }
+      matchweekGroups[round].push(match);
+    });
+
+    // Sort matchweeks
+    const sortedMatchweeks = Object.keys(matchweekGroups).sort((a, b) => {
+      // Extract numbers from round strings for proper sorting
+      const numA = parseInt(a.match(/\d+/)?.[0] || '0');
+      const numB = parseInt(b.match(/\d+/)?.[0] || '0');
+      return numA - numB;
+    });
+
+    // Find current or next matchweek (first upcoming or in progress)
+    let defaultMatchweek = sortedMatchweeks[0];
+    for (const round of sortedMatchweeks) {
+      const hasUpcoming = matchweekGroups[round].some(m => 
+        ['NS', 'TBD', '1H', '2H', 'HT', 'LIVE', 'ET', 'P', 'BT'].includes(m.fixture.status.short)
+      );
+      if (hasUpcoming) {
+        defaultMatchweek = round;
+        break;
+      }
+    }
+
+    // Initialize current matchweek if not set
+    if (!this.currentMatchweek) {
+      this.currentMatchweek = {};
+    }
+    this.currentMatchweek[leagueKey] = this.currentMatchweek[leagueKey] || defaultMatchweek;
+
+    const currentRound = this.currentMatchweek[leagueKey];
+    const currentIndex = sortedMatchweeks.indexOf(currentRound);
+    const matchesToShow = matchweekGroups[currentRound] || [];
+
+    // Render navigation and fixtures
+    const html = `
+      <div class="matchweek-navigation">
+        <button class="matchweek-nav-btn ${currentIndex === 0 ? 'disabled' : ''}" 
+                onclick="window.stadiumsApp.changeMatchweek('${leagueKey}', -1)" 
+                ${currentIndex === 0 ? 'disabled' : ''}>
+          ◄ מחזור קודם
+        </button>
+        <div class="matchweek-title">${currentRound}</div>
+        <button class="matchweek-nav-btn ${currentIndex === sortedMatchweeks.length - 1 ? 'disabled' : ''}" 
+                onclick="window.stadiumsApp.changeMatchweek('${leagueKey}', 1)" 
+                ${currentIndex === sortedMatchweeks.length - 1 ? 'disabled' : ''}>
+          מחזור הבא ►
+        </button>
+      </div>
+      <div class="matchweek-fixtures">
+        ${this.renderMatchweekFixtures(matchesToShow)}
+      </div>
+    `;
+
+    container.innerHTML = html;
+  }
+
+  changeMatchweek(leagueKey, direction) {
+    const fixtures = this.fixturesData[leagueKey];
+    if (!fixtures) return;
+
+    // Group fixtures by matchweek
+    const matchweekGroups = {};
+    fixtures.forEach(match => {
+      const round = match.league.round || 'N/A';
+      if (!matchweekGroups[round]) {
+        matchweekGroups[round] = [];
+      }
+      matchweekGroups[round].push(match);
+    });
+
+    // Sort matchweeks
+    const sortedMatchweeks = Object.keys(matchweekGroups).sort((a, b) => {
+      const numA = parseInt(a.match(/\d+/)?.[0] || '0');
+      const numB = parseInt(b.match(/\d+/)?.[0] || '0');
+      return numA - numB;
+    });
+
+    const currentRound = this.currentMatchweek[leagueKey];
+    const currentIndex = sortedMatchweeks.indexOf(currentRound);
+    const newIndex = currentIndex + direction;
+
+    if (newIndex >= 0 && newIndex < sortedMatchweeks.length) {
+      this.currentMatchweek[leagueKey] = sortedMatchweeks[newIndex];
+      
+      // Re-render the specific league
+      const containerId = leagueKey === 'ligatHaal' ? 'ligatHaalFixtures' : 'ligaLeumitFixtures';
+      const leagueName = leagueKey === 'ligatHaal' ? 'ליגת העל' : 'ליגה לאומית';
+      this.renderFixturesWithNavigation(containerId, fixtures, leagueName, leagueKey);
+    }
+  }
+
+  renderMatchweekFixtures(matches) {
+    if (!matches || matches.length === 0) {
+      return '<div class="table-loading">אין משחקים במחזור זה</div>';
+    }
+
+    return matches.map(match => {
+      const date = new Date(match.fixture.date);
+      const dateStr = date.toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      const timeStr = date.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+      const isLive = ['1H', '2H', 'HT', 'LIVE', 'ET', 'P', 'BT'].includes(match.fixture.status.short);
+      const isFinished = ['FT', 'AET', 'PEN', 'PST', 'CANC', 'ABD', 'AWD', 'WO'].includes(match.fixture.status.short);
+      
+      // Debug: log first finished match to see structure
+      if (isFinished && !this._debugLogged) {
+        console.log('Debug finished match:', match);
+        console.log('Has events?', !!match.events);
+        console.log('Events:', match.events);
+        this._debugLogged = true;
+      }
+      
+      // Get scorers if available
+      let scorersHtml = '';
+      if (isFinished && match.events && match.events.length > 0) {
+        const goals = match.events.filter(e => 
+          e.type === 'Goal' && e.detail !== 'Own Goal'
+        );
+        
+        if (goals.length > 0) {
+          const homeScorers = goals
+            .filter(g => g.team.id === match.teams.home.id)
+            .map(g => {
+              const penalty = g.detail === 'Penalty' ? ' (פנדל)' : '';
+              return `${g.player.name} ${g.time.elapsed}'${penalty}`;
+            })
+            .join(', ');
+          
+          const awayScorers = goals
+            .filter(g => g.team.id === match.teams.away.id)
+            .map(g => {
+              const penalty = g.detail === 'Penalty' ? ' (פנדל)' : '';
+              return `${g.player.name} ${g.time.elapsed}'${penalty}`;
+            })
+            .join(', ');
+          
+          if (homeScorers || awayScorers) {
+            // Swap for RTL display - away team appears on left visually in the teams display
+            scorersHtml = `
+              <div class="fixture-scorers">
+                <div class="scorer-side away">${awayScorers || '-'}</div>
+                <div class="scorer-divider">⚽</div>
+                <div class="scorer-side home">${homeScorers || '-'}</div>
+              </div>
+            `;
+          }
+        }
+      }
+      
+      // Prepare venue name for both data attribute and onclick
+      const venueNameForData = match.fixture.venue.name.replace(/"/g, '&quot;');
+      const venueNameForJs = match.fixture.venue.name.replace(/'/g, "\\'");
+      
+      return `
+        <div class="fixture-item ${isLive ? 'live' : ''} ${isFinished ? 'finished' : ''}" 
+             data-venue-name="${venueNameForData}" 
+             data-clickable="true"
+             data-fixture-id="${match.fixture.id}"
+             onclick="if(window.stadiumsApp){window.stadiumsApp.openStadiumByVenue('${venueNameForJs}');event.preventDefault();event.stopPropagation();}"
+             style="cursor: pointer;">
+          <div class="fixture-header">
+            <div class="fixture-date">
+              <div class="date">${dateStr}</div>
+              <div class="time">${timeStr}</div>
+              ${isLive ? '<div class="live-badge">🔴 LIVE</div>' : ''}
+              ${isFinished ? '<div class="finished-badge">נגמר</div>' : ''}
+            </div>
+            <div class="fixture-status-info">
+              ${isLive ? `<span class="match-minute">${match.fixture.status.elapsed}'</span>` : ''}
+            </div>
+          </div>
+          <div class="fixture-teams">
+            <div class="fixture-team">
+              <img src="${match.teams.home.logo}" alt="${match.teams.home.name}" class="team-logo-small">
+              <span class="team-name">${match.teams.home.name}</span>
+            </div>
+            <div class="fixture-score">
+              ${isLive || match.goals.home !== null ? 
+                `<span class="score">${match.goals.home} - ${match.goals.away}</span>` : 
+                '<span class="vs">vs</span>'}
+            </div>
+            <div class="fixture-team">
+              <span class="team-name">${match.teams.away.name}</span>
+              <img src="${match.teams.away.logo}" alt="${match.teams.away.name}" class="team-logo-small">
+            </div>
+          </div>
+          ${scorersHtml}
+          <div class="fixture-venue">📍 ${match.fixture.venue.name}</div>
+        </div>
+      `;
+    }).join('');
   }
 
   renderFixtures(containerId, fixtures, leagueName) {
@@ -1590,13 +1887,17 @@ class StadiumsApp {
       const dateStr = date.toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric' });
       const timeStr = date.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
       const isLive = ['1H', '2H', 'HT', 'LIVE', 'ET', 'P', 'BT'].includes(match.fixture.status.short);
+      const matchday = match.league.round || 'N/A';
       
       return `
-        <div class="fixture-item ${isLive ? 'live' : ''}">
-          <div class="fixture-date">
-            <div class="date">${dateStr}</div>
-            <div class="time">${timeStr}</div>
-            ${isLive ? '<div class="live-badge">🔴 LIVE</div>' : ''}
+        <div class="fixture-item ${isLive ? 'live' : ''}" data-venue-name="${match.fixture.venue.name}" onclick="window.stadiumsApp.openStadiumByVenue('${match.fixture.venue.name}')" style="cursor: pointer;">
+          <div class="fixture-header">
+            <div class="fixture-date">
+              <div class="date">${dateStr}</div>
+              <div class="time">${timeStr}</div>
+              ${isLive ? '<div class="live-badge">🔴 LIVE</div>' : ''}
+            </div>
+            <div class="fixture-matchday">מחזור ${matchday}</div>
           </div>
           <div class="fixture-teams">
             <div class="fixture-team">
@@ -1614,7 +1915,7 @@ class StadiumsApp {
               <img src="${match.teams.away.logo}" alt="${match.teams.away.name}" class="team-logo-small">
             </div>
           </div>
-          <div class="fixture-venue">${match.fixture.venue.name}</div>
+          <div class="fixture-venue">📍 ${match.fixture.venue.name}</div>
         </div>
       `;
     }).join('');
@@ -1685,19 +1986,79 @@ class StadiumsApp {
   }
 
   attachTableToggleHandlers() {
+    // Store reference to this for use in event handler
+    const self = this;
+    
     // Use event delegation to handle clicks even if tables are loaded later
     document.addEventListener('click', (e) => {
-      const title = e.target.closest('.league-table__title');
-      if (title) {
-        console.log('Table title clicked:', title.textContent);
-        const table = title.closest('.league-table');
+      // Handle league tables (standings)
+      const tableTitle = e.target.closest('.league-table__title');
+      if (tableTitle) {
+        console.log('Table title clicked:', tableTitle.textContent);
+        const table = tableTitle.closest('.league-table');
         if (table) {
           console.log('Toggling collapsed class. Current state:', table.classList.contains('collapsed'));
           table.classList.toggle('collapsed');
           console.log('New state:', table.classList.contains('collapsed'));
         }
       }
+      
+      // Handle fixtures
+      const fixturesTitle = e.target.closest('.league-fixtures__title');
+      if (fixturesTitle) {
+        console.log('Fixtures title clicked:', fixturesTitle.textContent);
+        const fixtures = fixturesTitle.closest('.league-fixtures');
+        if (fixtures) {
+          console.log('Toggling fixtures collapsed class. Current state:', fixtures.classList.contains('collapsed'));
+          fixtures.classList.toggle('collapsed');
+          console.log('Fixtures new state:', fixtures.classList.contains('collapsed'));
+        }
+      }
+      
+      // Handle league tab switching
+      const leagueTab = e.target.closest('.league-tab');
+      if (leagueTab) {
+        const tabName = leagueTab.dataset.tab;
+        console.log('League tab clicked:', tabName);
+        
+        // Remove active from all tabs and contents
+        document.querySelectorAll('.league-tab').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.league-tab-content').forEach(content => content.classList.remove('active'));
+        
+        // Add active to clicked tab and corresponding content
+        leagueTab.classList.add('active');
+        document.getElementById(`${tabName}-content`).classList.add('active');
+      }
+      
+      // Handle collapsible sections (parking/transit)
+      const collapsibleTitle = e.target.closest('.collapsible-title');
+      if (collapsibleTitle) {
+        console.log('Collapsible section clicked:', collapsibleTitle.textContent);
+        collapsibleTitle.classList.toggle('collapsed');
+        const content = collapsibleTitle.nextElementSibling;
+        if (content && content.classList.contains('collapsible-content')) {
+          content.classList.toggle('collapsed');
+        }
+      }
+      
+      // Handle fixture item clicks to open stadium
+      const fixtureItem = e.target.closest('.fixture-item[data-clickable="true"]');
+      if (fixtureItem) {
+        console.log('🎯 Fixture item clicked!', fixtureItem);
+        const venueName = fixtureItem.dataset.venueName;
+        console.log('Venue name from data attribute:', venueName);
+        if (venueName) {
+          e.preventDefault();
+          e.stopPropagation();
+          console.log('✓ Opening stadium for venue:', venueName);
+          self.openStadiumByVenue(venueName);
+        } else {
+          console.error('❌ No venue name found in data attribute');
+        }
+      }
     });
+    
+    console.log('✓ Event delegation attached for fixture clicks');
   }
 }
 
