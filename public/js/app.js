@@ -1799,7 +1799,8 @@ class StadiumsApp {
     console.log(`🔄 Changing matchweek for ${leagueKey}:`);
     console.log(`   Current: "${currentRound}" (index ${currentIndex})`);
     console.log(`   Direction: ${direction > 0 ? 'next' : 'previous'}`);
-    console.log(`   Available matchweeks:`, sortedMatchweeks);
+    console.log(`   Available matchweeks (${sortedMatchweeks.length}):`, sortedMatchweeks);
+    console.log(`   Has "Regular Season - 11"?`, sortedMatchweeks.includes('Regular Season - 11'));
     
     // Validate current matchweek exists in sorted list
     if (currentIndex === -1) {

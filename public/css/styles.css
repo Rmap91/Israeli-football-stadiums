@@ -2092,8 +2092,7 @@ body {
 }
 
 .fixtures-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+    display: flex;
     gap: 20px;
     max-width: 1100px;
     margin: 0 auto;
@@ -2101,18 +2100,22 @@ body {
 }
 
 .league-fixtures {
-    background: transparent;
+    width: calc(50% - 10px);
+    flex-shrink: 0;
+    flex-grow: 0;
+    background: #ffffff;
     border-radius: 12px;
     overflow: hidden;
-    box-shadow: none;
-    border: none;
-    transition: background 0.3s ease, box-shadow 0.3s ease, border 0.3s ease;
-}
-
-.league-fixtures:not(.collapsed) {
-    background: #ffffff;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
     border: 1px solid rgba(102, 126, 234, 0.1);
+    display: flex;
+    flex-direction: column;
+}
+
+.league-fixtures .fixtures-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 .league-fixtures__title {
@@ -2151,27 +2154,24 @@ body {
 }
 
 .fixtures-wrapper {
-    padding: 0;
     direction: rtl;
-    overflow-x: auto;
-    overflow-y: hidden;
+    overflow: hidden;
     max-height: 0;
     opacity: 0;
-    transition: max-height 0.4s ease, opacity 0.3s ease, padding 0.3s ease, background 0.3s ease;
-    background: transparent;
+    padding: 0;
+    transition: max-height 0.4s ease, opacity 0.3s ease, padding 0.3s ease;
 }
 
 .league-fixtures:not(.collapsed) .fixtures-wrapper {
     max-height: 3000px;
     opacity: 1;
-    padding: 15px;
-    overflow-y: visible;
-    background: white;
+    overflow: visible;
+    padding: 0;
 }
 
 .fixture-item {
     padding: 16px;
-    margin-bottom: 12px;
+    margin: 0 15px 12px 15px;
     background: #f9fafb;
     border-radius: 8px;
     border: 1px solid #e5e7eb;
@@ -2179,6 +2179,14 @@ body {
     cursor: pointer;
     position: relative;
     z-index: 1;
+}
+
+.fixture-item:first-child {
+    margin-top: 15px;
+}
+
+.fixture-item:last-child {
+    margin-bottom: 15px;
 }
 
 .fixture-item * {
@@ -2353,10 +2361,11 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 20px;
+    gap: 15px;
+    padding: 20px 15px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 12px;
-    margin-bottom: 20px;
+    border-radius: 0;
+    margin: 0;
     direction: rtl;
 }
 
@@ -2366,6 +2375,7 @@ body {
     color: white;
     text-align: center;
     flex: 1;
+    min-width: 0;
 }
 
 .matchweek-nav-btn {
@@ -2379,6 +2389,8 @@ body {
     cursor: pointer;
     transition: all 0.3s ease;
     backdrop-filter: blur(10px);
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .matchweek-nav-btn:hover:not(.disabled) {
@@ -2393,7 +2405,9 @@ body {
 }
 
 .matchweek-fixtures {
-    margin-top: 0;
+    margin: 0;
+    padding: 0;
+    min-height: 400px;
 }
 
 .fixture-item.finished {
