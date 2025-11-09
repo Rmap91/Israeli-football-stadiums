@@ -1714,13 +1714,13 @@ class StadiumsApp {
         <button class="matchweek-nav-btn ${currentIndex === 0 ? 'disabled' : ''}" 
                 onclick="window.stadiumsApp.changeMatchweek('${leagueKey}', -1)" 
                 ${currentIndex === 0 ? 'disabled' : ''}>
-          ◄ מחזור קודם
+          מחזור קודם
         </button>
         <div class="matchweek-title">${currentRound}</div>
         <button class="matchweek-nav-btn ${currentIndex === sortedMatchweeks.length - 1 ? 'disabled' : ''}" 
                 onclick="window.stadiumsApp.changeMatchweek('${leagueKey}', 1)" 
                 ${currentIndex === sortedMatchweeks.length - 1 ? 'disabled' : ''}>
-          מחזור הבא ►
+          מחזור הבא
         </button>
       </div>
       <div class="matchweek-fixtures">

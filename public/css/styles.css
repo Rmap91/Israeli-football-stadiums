@@ -832,7 +832,7 @@ body {
     user-select: none;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    gap: 10px;
     transition: color 0.3s ease;
 }
 
@@ -844,11 +844,10 @@ body {
     content: '▼';
     font-size: 0.9em;
     transition: transform 0.3s ease;
-    margin-left: auto;
 }
 
 .collapsible-title.collapsed::after {
-    transform: rotate(-90deg);
+    transform: rotate(90deg); /* Rotate to point left for RTL */
 }
 
 .collapsible-content {
@@ -1056,6 +1055,7 @@ body {
     color: var(--text-muted);
     font-size: 10px;
     transition: transform 0.2s ease;
+    order: -1; /* Place arrow on the left for RTL */
 }
 
 .full-hours {
@@ -1085,7 +1085,7 @@ body {
 }
 
 .place-meta {
-    text-align: left;
+    text-align: right;
     font-size: 14px;
     color: var(--text-light);
 }
@@ -1380,6 +1380,7 @@ body {
     font-size: 0.8rem;
     transition: transform 0.3s ease;
     color: var(--secondary-color);
+    order: -1; /* Place arrow on the left for RTL */
 }
 
 .team-filter-header label::before {
@@ -1775,14 +1776,17 @@ body {
     margin: 0 0 50px;
     padding: 60px 20px;
     background: transparent;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .league-info-title {
-    font-size: 32px;
-    font-weight: 800;
+    font-size: 26px;
+    font-weight: 700;
     color: var(--text-primary);
     text-align: center;
-    margin: 0 0 30px;
+    margin: 0 0 20px;
     direction: rtl;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     -webkit-background-clip: text;
@@ -1791,25 +1795,30 @@ body {
 }
 
 .league-tabs {
-    display: flex;
+    display: inline-flex;
     justify-content: center;
-    gap: 10px;
-    margin: 0 auto 40px;
-    max-width: 500px;
+    gap: 6px;
+    margin: 0 auto 24px;
+    padding: 4px 6px;
+    max-width: fit-content;
+    background: #f9fafb;
+    border-radius: 8px;
     direction: rtl;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .league-tab {
-    flex: 1;
-    padding: 14px 24px;
-    background: #f3f4f6;
-    border: 2px solid transparent;
-    border-radius: 10px;
-    font-size: 16px;
+    flex: 0 0 auto;
+    padding: 6px 12px;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
     font-weight: 600;
     color: #6b7280;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
+    white-space: nowrap;
 }
 
 .league-tab:hover {
@@ -1820,8 +1829,7 @@ body {
 .league-tab.active {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    border-color: transparent;
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 2px 6px rgba(102, 126, 234, 0.25);
 }
 
 .league-tab-content {
@@ -1857,9 +1865,9 @@ body {
 }
 
 .league-table__title {
-    font-size: 18px;
-    font-weight: 700;
-    padding: 16px 20px;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 12px 18px;
     margin: 0;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
@@ -1874,6 +1882,7 @@ body {
     justify-content: center;
     gap: 10px;
     transition: background 0.3s ease;
+    flex-direction: row-reverse; /* Reverse order for RTL */
 }
 
 .league-table__title:hover {
@@ -1882,12 +1891,12 @@ body {
 
 .league-table__title::after {
     content: '▼';
-    font-size: 14px;
+    font-size: 12px;
     transition: transform 0.3s ease;
 }
 
 .league-table.collapsed .league-table__title::after {
-    transform: rotate(-90deg);
+    transform: rotate(90deg); /* Rotate to point left for RTL */
 }
 
 .table-wrapper {
@@ -2090,9 +2099,9 @@ body {
 }
 
 .league-fixtures__title {
-    font-size: 18px;
-    font-weight: 700;
-    padding: 16px 20px;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 12px 18px;
     margin: 0;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
@@ -2107,6 +2116,7 @@ body {
     justify-content: center;
     align-items: center;
     gap: 10px;
+    flex-direction: row-reverse; /* Reverse order for RTL */
 }
 
 .league-fixtures__title:hover {
@@ -2115,12 +2125,12 @@ body {
 
 .league-fixtures__title::after {
     content: '▼';
-    font-size: 14px;
+    font-size: 12px;
     transition: transform 0.3s ease;
 }
 
 .league-fixtures.collapsed .league-fixtures__title::after {
-    transform: rotate(-90deg);
+    transform: rotate(90deg); /* Rotate to point left for RTL */
 }
 
 .fixtures-wrapper {
