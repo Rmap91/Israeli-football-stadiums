@@ -1678,13 +1678,22 @@ class StadiumsApp {
       matchweekGroups[round].push(match);
     });
 
-    // Sort matchweeks
-    const sortedMatchweeks = Object.keys(matchweekGroups).sort((a, b) => {
-      // Extract numbers from round strings for proper sorting
-      const numA = parseInt(a.match(/\d+/)?.[0] || '0');
-      const numB = parseInt(b.match(/\d+/)?.[0] || '0');
-      return numA - numB;
-    });
+    // Sort matchweeks and filter out empty ones
+    const sortedMatchweeks = Object.keys(matchweekGroups)
+      .filter(round => matchweekGroups[round] && matchweekGroups[round].length > 0)
+      .sort((a, b) => {
+        // Extract numbers from round strings for proper sorting
+        const numA = parseInt(a.match(/\d+/)?.[0] || '0');
+        const numB = parseInt(b.match(/\d+/)?.[0] || '0');
+        return numA - numB;
+      });
+
+    // Validate we have matchweeks
+    if (sortedMatchweeks.length === 0) {
+      console.warn('⚠️ No valid matchweeks found for:', containerId);
+      container.innerHTML = '<div class="table-loading">אין משחקים קרובים</div>';
+      return;
+    }
 
     // Find current or next matchweek (first upcoming or in progress)
     let defaultMatchweek = sortedMatchweeks[0];
@@ -1702,11 +1711,25 @@ class StadiumsApp {
     if (!this.currentMatchweek) {
       this.currentMatchweek = {};
     }
-    this.currentMatchweek[leagueKey] = this.currentMatchweek[leagueKey] || defaultMatchweek;
+    
+    // Validate the stored matchweek still exists in the data
+    const storedMatchweek = this.currentMatchweek[leagueKey];
+    if (!storedMatchweek || !sortedMatchweeks.includes(storedMatchweek)) {
+      this.currentMatchweek[leagueKey] = defaultMatchweek;
+    } else {
+      this.currentMatchweek[leagueKey] = storedMatchweek;
+    }
 
     const currentRound = this.currentMatchweek[leagueKey];
     const currentIndex = sortedMatchweeks.indexOf(currentRound);
     const matchesToShow = matchweekGroups[currentRound] || [];
+
+    // Double-check we have matches to show
+    if (matchesToShow.length === 0) {
+      console.warn(`⚠️ No matches found for matchweek: ${currentRound}`);
+      container.innerHTML = '<div class="table-loading">אין משחקים במחזור זה</div>';
+      return;
+    }
 
     // Render navigation and fixtures
     const html = `
@@ -1745,15 +1768,29 @@ class StadiumsApp {
       matchweekGroups[round].push(match);
     });
 
-    // Sort matchweeks
-    const sortedMatchweeks = Object.keys(matchweekGroups).sort((a, b) => {
-      const numA = parseInt(a.match(/\d+/)?.[0] || '0');
+    // Sort matchweeks and filter out empty ones
+    const sortedMatchweeks = Object.keys(matchweekGroups)
+      .filter(round => matchweekGroups[round] && matchweekGroups[round].length > 0)
+      .sort((a, b) => {
+        const numA = parseInt(a.match(/\d+/)?.[0] || '0');
       const numB = parseInt(b.match(/\d+/)?.[0] || '0');
       return numA - numB;
     });
 
     const currentRound = this.currentMatchweek[leagueKey];
     const currentIndex = sortedMatchweeks.indexOf(currentRound);
+    
+    // Validate current matchweek exists in sorted list
+    if (currentIndex === -1) {
+      console.warn(`⚠️ Current matchweek "${currentRound}" not found in available matchweeks`);
+      // Reset to first available matchweek
+      this.currentMatchweek[leagueKey] = sortedMatchweeks[0];
+      const containerId = leagueKey === 'ligatHaal' ? 'ligatHaalFixtures' : 'ligaLeumitFixtures';
+      const leagueName = leagueKey === 'ligatHaal' ? 'ליגת העל' : 'ליגה לאומית';
+      this.renderFixturesWithNavigation(containerId, fixtures, leagueName, leagueKey);
+      return;
+    }
+    
     const newIndex = currentIndex + direction;
 
     if (newIndex >= 0 && newIndex < sortedMatchweeks.length) {
