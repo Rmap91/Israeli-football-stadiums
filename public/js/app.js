@@ -1688,6 +1688,22 @@ class StadiumsApp {
         return numA - numB;
       });
 
+    // Debug: Log all matchweeks found
+    const allRounds = Object.keys(matchweekGroups);
+    console.log(`\n📊 ${leagueName} - RAW DATA`);
+    console.log(`   Total matchweeks: ${allRounds.length}`);
+    console.log(`   Matchweeks:`, allRounds.sort());
+    console.log(`\n📊 ${leagueName} - COUNTS`);
+    Object.entries(matchweekGroups).sort((a,b) => {
+      const numA = parseInt(a[0].match(/\d+/)?.[0] || '0');
+      const numB = parseInt(b[0].match(/\d+/)?.[0] || '0');
+      return numA - numB;
+    }).forEach(([round, matches]) => {
+      console.log(`   ${round}: ${matches.length} matches`);
+    });
+    console.log(`\n📊 ${leagueName} - AFTER FILTERING`);
+    console.log(`   Sorted matchweeks:`, sortedMatchweeks);
+
     // Validate we have matchweeks
     if (sortedMatchweeks.length === 0) {
       console.warn('⚠️ No valid matchweeks found for:', containerId);
@@ -1780,6 +1796,11 @@ class StadiumsApp {
     const currentRound = this.currentMatchweek[leagueKey];
     const currentIndex = sortedMatchweeks.indexOf(currentRound);
     
+    console.log(`🔄 Changing matchweek for ${leagueKey}:`);
+    console.log(`   Current: "${currentRound}" (index ${currentIndex})`);
+    console.log(`   Direction: ${direction > 0 ? 'next' : 'previous'}`);
+    console.log(`   Available matchweeks:`, sortedMatchweeks);
+    
     // Validate current matchweek exists in sorted list
     if (currentIndex === -1) {
       console.warn(`⚠️ Current matchweek "${currentRound}" not found in available matchweeks`);
@@ -1792,9 +1813,11 @@ class StadiumsApp {
     }
     
     const newIndex = currentIndex + direction;
+    console.log(`   New index: ${newIndex}, New matchweek: "${sortedMatchweeks[newIndex] || 'N/A'}"`);
 
     if (newIndex >= 0 && newIndex < sortedMatchweeks.length) {
       this.currentMatchweek[leagueKey] = sortedMatchweeks[newIndex];
+      console.log(`✅ Changed to: "${this.currentMatchweek[leagueKey]}"`);
       
       // Re-render the specific league
       const containerId = leagueKey === 'ligatHaal' ? 'ligatHaalFixtures' : 'ligaLeumitFixtures';

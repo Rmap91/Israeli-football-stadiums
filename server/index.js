@@ -62,6 +62,11 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 
 // Function to get real places from Google Places API
 async function getNearbyPlaces(lat, lng, type, radius = 1000) {
+  // DISABLED TO SAVE COSTS - Return empty array
+  console.log(`⚠️ Google Places API DISABLED - Skipping ${type} lookup for ${lat}, ${lng}`);
+  return [];
+  
+  /* DISABLED CODE
   if (!GOOGLE_PLACES_API_KEY) {
     console.warn('Google Places API key not configured');
     return [];
@@ -154,6 +159,7 @@ async function getNearbyPlaces(lat, lng, type, radius = 1000) {
     }
     return [];
   }
+  */ // END DISABLED CODE
 }
 
 // Simple API to test
