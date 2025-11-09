@@ -2150,6 +2150,12 @@ body {
     border: 1px solid #e5e7eb;
     transition: all 0.2s ease;
     cursor: pointer;
+    position: relative;
+    z-index: 1;
+}
+
+.fixture-item * {
+    pointer-events: none;
 }
 
 .fixture-item:hover {
