@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Israeli Football Stadiums Database</title>
     <meta name="description" content="Comprehensive database of Israeli football stadiums with search functionality">
-    <link rel="stylesheet" href="css/styles.css?v=47">
+    <link rel="stylesheet" href="css/styles.css?v=49">
 </head>
 <body>
     <header class="header">
@@ -87,16 +87,29 @@
 
                 <!-- Fixtures Tab Content -->
                 <div class="league-tab-content" id="fixtures-content">
-                    <div class="fixtures-container">
-                        <div class="league-fixtures">
-                            <h3 class="league-fixtures__title">ליגת העל</h3>
-                            <div id="ligatHaalFixtures" class="fixtures-wrapper">
-                                <div class="table-loading">טוען משחקים...</div>
-                            </div>
+                    <div class="fixtures-selection">
+                        <button class="league-selector-card" onclick="window.stadiumsApp.openFixturesModal('ligatHaal')">
+                            <div class="league-selector-card__icon">⚽</div>
+                            <h3 class="league-selector-card__title">ליגת העל</h3>
+                            <p class="league-selector-card__subtitle">לחץ לצפייה במשחקים</p>
+                        </button>
+                        <button class="league-selector-card" onclick="window.stadiumsApp.openFixturesModal('ligaLeumit')">
+                            <div class="league-selector-card__icon">⚽</div>
+                            <h3 class="league-selector-card__title">ליגה לאומית</h3>
+                            <p class="league-selector-card__subtitle">לחץ לצפייה במשחקים</p>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Fixtures Modal -->
+                <div class="fixtures-modal" id="fixturesModal" onclick="window.stadiumsApp.closeFixturesModal(event)">
+                    <div class="fixtures-modal__content" onclick="event.stopPropagation()">
+                        <button class="fixtures-modal__close" onclick="window.stadiumsApp.closeFixturesModal()">&times;</button>
+                        <div class="fixtures-modal__header">
+                            <h2 class="fixtures-modal__title" id="modalLeagueTitle"></h2>
                         </div>
-                        <div class="league-fixtures">
-                            <h3 class="league-fixtures__title">ליגה לאומית</h3>
-                            <div id="ligaLeumitFixtures" class="fixtures-wrapper">
+                        <div class="fixtures-modal__body">
+                            <div id="modalFixturesContent">
                                 <div class="table-loading">טוען משחקים...</div>
                             </div>
                         </div>
@@ -141,6 +154,6 @@
         </div>
     </div>
 
-    <script src="js/app.js?v=41"></script>
+    <script src="js/app.js?v=44"></script>
 </body>
 </html>

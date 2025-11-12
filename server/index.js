@@ -62,13 +62,8 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 
 // Function to get real places from Google Places API
 async function getNearbyPlaces(lat, lng, type, radius = 1000) {
-  // DISABLED TO SAVE COSTS - Return empty array
-  console.log(`⚠️ Google Places API DISABLED - Skipping ${type} lookup for ${lat}, ${lng}`);
-  return [];
-  
-  /* DISABLED CODE
   if (!GOOGLE_PLACES_API_KEY) {
-    console.warn('Google Places API key not configured');
+    console.log(`⚠️ Google Places API DISABLED - Skipping ${type} lookup for ${lat}, ${lng}`);
     return [];
   }
 
@@ -159,7 +154,6 @@ async function getNearbyPlaces(lat, lng, type, radius = 1000) {
     }
     return [];
   }
-  */ // END DISABLED CODE
 }
 
 // Simple API to test
@@ -392,11 +386,12 @@ const ISRAELI_TEAMS = {
 // Get upcoming matches for a stadium
 app.get('/api/stadiums/:id/matches', async (req, res) => {
   const stadiumId = parseInt(req.params.id);
+  const filterTeam = req.query.team; // Optional: filter by specific team
   
   try {
     // First get stadium name by ID
     const stadiumRow = await new Promise((resolve, reject) => {
-      db.get('SELECT name_hebrew FROM stadiums WHERE id = ?', [stadiumId], (err, row) => {
+      db.get('SELECT name_hebrew, clubs_playing FROM stadiums WHERE id = ?', [stadiumId], (err, row) => {
         if (err) reject(err);
         else resolve(row);
       });
@@ -437,10 +432,16 @@ app.get('/api/stadiums/:id/matches', async (req, res) => {
       .map(t => t.trim())
       .filter((team, index, arr) => arr.indexOf(team) === index); // Remove duplicates
     
+    // If a specific team is requested, filter to just that team
+    const teamsToFetch = filterTeam ? allTeams.filter(team => team === filterTeam) : allTeams;
+    
     console.log(`Stadium ${stadiumName} has teams:`, allTeams);
+    if (filterTeam) {
+      console.log(`Filtering to only: ${filterTeam}`);
+    }
     
     // Get team IDs from mapping
-    const teamIds = allTeams.map(team => ISRAELI_TEAMS[team]).filter(Boolean);
+    const teamIds = teamsToFetch.map(team => ISRAELI_TEAMS[team]).filter(Boolean);
     
     if (teamIds.length === 0) {
       return res.json({
@@ -665,16 +666,17 @@ app.get('/api/standings', async (req, res) => {
   try {
     const API_FOOTBALL_KEY = process.env.API_FOOTBALL_KEY;
     const API_FOOTBALL_BASE_URL = 'https://v3.football.api-sports.io';
+    const currentSeason = 2025; // Israeli season 2025-2026
     
     // Fetch both league standings
     const [ligat, leumit] = await Promise.all([
       axios.get(`${API_FOOTBALL_BASE_URL}/standings`, {
         headers: { 'x-apisports-key': API_FOOTBALL_KEY },
-        params: { league: 383, season: 2025 } // Ligat Ha'al
+        params: { league: 383, season: currentSeason } // Ligat Ha'al
       }),
       axios.get(`${API_FOOTBALL_BASE_URL}/standings`, {
         headers: { 'x-apisports-key': API_FOOTBALL_KEY },
-        params: { league: 382, season: 2025 } // Liga Leumit
+        params: { league: 382, season: currentSeason } // Liga Leumit
       })
     ]);
 
@@ -697,12 +699,15 @@ app.get('/api/fixtures', async (req, res) => {
     console.log('Fetching fixtures for both Israeli leagues (past and upcoming)...');
     
     // Fetch last 50 and next 50 matches from both leagues to get complete matchweeks
+    // Israeli season runs Aug-May, so 2025-2026 season is identified as "2025" in the API
+    const currentSeason = 2025;
+    
     const [ligatHaalLast, ligatHaalNext, ligaLeumitLast, ligaLeumitNext] = await Promise.all([
       axios.get(`${API_FOOTBALL_BASE_URL}/fixtures`, {
         headers: { 'x-apisports-key': API_FOOTBALL_KEY },
         params: { 
           league: 383, // Ligat Ha'al
-          season: 2025,
+          season: currentSeason,
           last: 50,
           timezone: 'Asia/Jerusalem'
         }
@@ -711,7 +716,7 @@ app.get('/api/fixtures', async (req, res) => {
         headers: { 'x-apisports-key': API_FOOTBALL_KEY },
         params: { 
           league: 383, // Ligat Ha'al
-          season: 2025,
+          season: currentSeason,
           next: 50,
           timezone: 'Asia/Jerusalem'
         }
@@ -720,7 +725,7 @@ app.get('/api/fixtures', async (req, res) => {
         headers: { 'x-apisports-key': API_FOOTBALL_KEY },
         params: { 
           league: 382, // Liga Leumit
-          season: 2025,
+          season: currentSeason,
           last: 50,
           timezone: 'Asia/Jerusalem'
         }
@@ -729,7 +734,7 @@ app.get('/api/fixtures', async (req, res) => {
         headers: { 'x-apisports-key': API_FOOTBALL_KEY },
         params: { 
           league: 382, // Liga Leumit
-          season: 2025,
+          season: currentSeason,
           next: 50,
           timezone: 'Asia/Jerusalem'
         }

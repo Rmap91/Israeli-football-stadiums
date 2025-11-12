@@ -315,8 +315,8 @@ class StadiumsApp {
     // Store the team filter to apply after modal loads
     this.pendingTeamFilter = { stadiumId, teamName };
     
-    // Show the modal (it will stay on overview tab)
-    this.showStadiumModal(stadiumId);
+    // Show the modal with team filter
+    this.showStadiumModal(stadiumId, teamName);
     
     // Wait for modal content to load, then apply team filter
     setTimeout(() => {
@@ -460,7 +460,7 @@ class StadiumsApp {
     this.elements.resultsCount.classList.remove('hidden');
   }
 
-  async showStadiumModal(stadiumId) {
+  async showStadiumModal(stadiumId, filterTeam = null) {
     try {
       // Show modal and loading state
       this.elements.stadiumModal.classList.remove('hidden');
@@ -474,7 +474,7 @@ class StadiumsApp {
       }
       
       const stadium = await response.json();
-      this.renderEnhancedStadiumModal(stadium, stadiumId);
+      this.renderEnhancedStadiumModal(stadium, stadiumId, filterTeam);
       
     } catch (error) {
       console.error('Error loading stadium details:', error);
@@ -487,7 +487,7 @@ class StadiumsApp {
     }
   }
 
-  renderEnhancedStadiumModal(stadium, stadiumId) {
+  renderEnhancedStadiumModal(stadium, stadiumId, filterTeam = null) {
     // Parse teams list for better display
     const teamsList = stadium.clubs_playing ? stadium.clubs_playing.split(', ').map(team => team.trim()) : [];
     const teamsHTML = teamsList.length > 0 
@@ -635,8 +635,8 @@ class StadiumsApp {
     // Add tab switching functionality
     this.setupTabs();
     
-    // Load upcoming matches
-    this.loadUpcomingMatches(stadiumId);
+    // Load upcoming matches with optional team filter
+    this.loadUpcomingMatches(stadiumId, filterTeam);
     
     // Load nearby places - now works with mock data for all stadiums
     console.log(`About to load nearby places for stadium ${stadiumId}`);
@@ -663,8 +663,8 @@ class StadiumsApp {
     });
   }
 
-  async loadUpcomingMatches(stadiumId) {
-    console.log(`Loading upcoming matches for stadium ${stadiumId}`);
+  async loadUpcomingMatches(stadiumId, filterTeam = null) {
+    console.log(`Loading upcoming matches for stadium ${stadiumId}`, filterTeam ? `filtered by ${filterTeam}` : '');
     const container = document.getElementById(`upcoming-matches-${stadiumId}`);
     console.log('Container found:', container);
     
@@ -675,7 +675,11 @@ class StadiumsApp {
 
     try {
       console.log('Fetching matches from API...');
-      const response = await fetch(`/api/stadiums/${stadiumId}/matches`);
+      // Add team filter if specified
+      const url = filterTeam 
+        ? `/api/stadiums/${stadiumId}/matches?team=${encodeURIComponent(filterTeam)}`
+        : `/api/stadiums/${stadiumId}/matches`;
+      const response = await fetch(url);
       const data = await response.json();
       console.log('Matches data received:', data);
       
@@ -1644,14 +1648,9 @@ class StadiumsApp {
         ligaLeumit: data.ligaLeumit || []
       };
       
-      // Render with matchweek navigation
-      this.renderFixturesWithNavigation('ligatHaalFixtures', this.fixturesData.ligatHaal, 'ליגת העל', 'ligatHaal');
-      this.renderFixturesWithNavigation('ligaLeumitFixtures', this.fixturesData.ligaLeumit, 'ליגה לאומית', 'ligaLeumit');
-      console.log('✅ Fixtures rendered');
+      console.log('✅ Fixtures data loaded and ready for modal display');
     } catch (error) {
       console.error('❌ Error loading fixtures:', error);
-      document.getElementById('ligatHaalFixtures').innerHTML = '<div class="table-loading">שגיאה בטעינת המשחקים</div>';
-      document.getElementById('ligaLeumitFixtures').innerHTML = '<div class="table-loading">שגיאה בטעינת המשחקים</div>';
     }
   }
 
@@ -1820,10 +1819,48 @@ class StadiumsApp {
       this.currentMatchweek[leagueKey] = sortedMatchweeks[newIndex];
       console.log(`✅ Changed to: "${this.currentMatchweek[leagueKey]}"`);
       
-      // Re-render the specific league
-      const containerId = leagueKey === 'ligatHaal' ? 'ligatHaalFixtures' : 'ligaLeumitFixtures';
-      const leagueName = leagueKey === 'ligatHaal' ? 'ליגת העל' : 'ליגה לאומית';
-      this.renderFixturesWithNavigation(containerId, fixtures, leagueName, leagueKey);
+      // Re-render in modal
+      this.renderFixturesWithNavigation('modalFixturesContent', fixtures, '', leagueKey);
+    }
+  }
+
+  openFixturesModal(leagueKey) {
+    const modal = document.getElementById('fixturesModal');
+    const titleEl = document.getElementById('modalLeagueTitle');
+    
+    const leagueName = leagueKey === 'ligatHaal' ? 'ליגת העל' : 'ליגה לאומית';
+    const fixtures = this.fixturesData[leagueKey];
+    
+    titleEl.textContent = leagueName;
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden'; // Prevent background scrolling
+    
+    // Add keyboard listener for ESC key
+    this._escapeListener = (e) => {
+      if (e.key === 'Escape') {
+        this.closeFixturesModal();
+      }
+    };
+    document.addEventListener('keydown', this._escapeListener);
+    
+    // Render fixtures in modal
+    this.renderFixturesWithNavigation('modalFixturesContent', fixtures, '', leagueKey);
+  }
+
+  closeFixturesModal(event) {
+    // If event is provided and it's not a click on the backdrop, ignore
+    if (event && event.target.closest('.fixtures-modal__content') && !event.target.classList.contains('fixtures-modal__close')) {
+      return;
+    }
+    
+    const modal = document.getElementById('fixturesModal');
+    modal.classList.remove('active');
+    document.body.style.overflow = ''; // Restore scrolling
+    
+    // Remove keyboard listener
+    if (this._escapeListener) {
+      document.removeEventListener('keydown', this._escapeListener);
+      this._escapeListener = null;
     }
   }
 
