@@ -79,4 +79,4 @@ params: {
 ## Server Status
 
 Server is running on `http://localhost:3000`
-API-Football key is configured: `bf6c88a56a0396da5117f38c28e7ac10`
+API-Football key is configured: ✅ (stored in .env file)
