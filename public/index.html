@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Israeli Football Stadiums Database</title>
     <meta name="description" content="Comprehensive database of Israeli football stadiums with search functionality">
-    <link rel="stylesheet" href="css/styles.css?v=49">
+    <link rel="stylesheet" href="css/styles.css?v=60">
 </head>
 <body>
     <header class="header">
@@ -59,46 +59,51 @@
 
             <!-- League Info Section with Tabs -->
             <section class="league-info-section">
-                <h2 class="league-info-title">מידע ליגות</h2>
+                <div class="league-info-header">
+                    <h2 class="league-info-title">מידע ליגות</h2>
+                    <button class="league-info-toggle" onclick="window.stadiumsApp.toggleLeagueInfo()">
+                        <span class="toggle-icon">▼</span>
+                    </button>
+                </div>
                 
-                <!-- Tab Navigation -->
-                <div class="league-tabs">
-                    <button class="league-tab active" data-tab="standings">טבלאות</button>
-                    <button class="league-tab" data-tab="fixtures">משחקים קרובים</button>
+                <div class="league-info-content">
+                    <!-- League Selection Tab Navigation -->
+                    <div class="league-tabs">
+                    <button class="league-tab active" data-tab="ligatHaal">ליגת העל</button>
+                    <button class="league-tab" data-tab="ligaLeumit">ליגה לאומית</button>
                 </div>
 
-                <!-- Standings Tab Content -->
-                <div class="league-tab-content active" id="standings-content">
-                    <div class="standings-container">
-                        <div class="league-table collapsed">
-                            <h3 class="league-table__title">ליגת העל</h3>
-                            <div id="ligatHaalTable" class="table-wrapper">
-                                <div class="table-loading">טוען נתונים...</div>
-                            </div>
-                        </div>
-                        <div class="league-table collapsed">
-                            <h3 class="league-table__title">ליגה לאומית</h3>
-                            <div id="ligaLeumitTable" class="table-wrapper">
-                                <div class="table-loading">טוען נתונים...</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Fixtures Tab Content -->
-                <div class="league-tab-content" id="fixtures-content">
-                    <div class="fixtures-selection">
+                <!-- Ligat Ha'al Content -->
+                <div class="league-tab-content active" id="ligatHaal-content">
+                    <div class="league-options">
                         <button class="league-selector-card" onclick="window.stadiumsApp.openFixturesModal('ligatHaal')">
                             <div class="league-selector-card__icon">⚽</div>
-                            <h3 class="league-selector-card__title">ליגת העל</h3>
-                            <p class="league-selector-card__subtitle">לחץ לצפייה במשחקים</p>
+                            <h3 class="league-selector-card__title">משחקים קרובים</h3>
+                            <p class="league-selector-card__subtitle">לחץ לצפייה במשחקי ליגת העל</p>
                         </button>
-                        <button class="league-selector-card" onclick="window.stadiumsApp.openFixturesModal('ligaLeumit')">
-                            <div class="league-selector-card__icon">⚽</div>
-                            <h3 class="league-selector-card__title">ליגה לאומית</h3>
-                            <p class="league-selector-card__subtitle">לחץ לצפייה במשחקים</p>
+                        <button class="league-selector-card" onclick="window.stadiumsApp.openStandingsModal('ligatHaal')">
+                            <div class="league-selector-card__icon">🏆</div>
+                            <h3 class="league-selector-card__title">טבלה</h3>
+                            <p class="league-selector-card__subtitle">לחץ לצפייה בטבלת ליגת העל</p>
                         </button>
                     </div>
+                </div>
+
+                <!-- Liga Leumit Content -->
+                <div class="league-tab-content" id="ligaLeumit-content">
+                    <div class="league-options">
+                        <button class="league-selector-card" onclick="window.stadiumsApp.openFixturesModal('ligaLeumit')">
+                            <div class="league-selector-card__icon">⚽</div>
+                            <h3 class="league-selector-card__title">משחקים קרובים</h3>
+                            <p class="league-selector-card__subtitle">לחץ לצפייה במשחקי ליגה לאומית</p>
+                        </button>
+                        <button class="league-selector-card" onclick="window.stadiumsApp.openStandingsModal('ligaLeumit')">
+                            <div class="league-selector-card__icon">🏆</div>
+                            <h3 class="league-selector-card__title">טבלה</h3>
+                            <p class="league-selector-card__subtitle">לחץ לצפייה בטבלת ליגה לאומית</p>
+                        </button>
+                    </div>
+                </div>
                 </div>
 
                 <!-- Fixtures Modal -->
@@ -111,6 +116,21 @@
                         <div class="fixtures-modal__body">
                             <div id="modalFixturesContent">
                                 <div class="table-loading">טוען משחקים...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Standings Modal -->
+                <div class="standings-modal" id="standingsModal" onclick="window.stadiumsApp.closeStandingsModal(event)">
+                    <div class="standings-modal__content" onclick="event.stopPropagation()">
+                        <button class="standings-modal__close" onclick="window.stadiumsApp.closeStandingsModal()">&times;</button>
+                        <div class="standings-modal__header">
+                            <h2 class="standings-modal__title" id="modalStandingsTitle"></h2>
+                        </div>
+                        <div class="standings-modal__body">
+                            <div id="modalStandingsContent">
+                                <div class="table-loading">טוען טבלה...</div>
                             </div>
                         </div>
                     </div>
@@ -154,6 +174,6 @@
         </div>
     </div>
 
-    <script src="js/app.js?v=44"></script>
+    <script src="js/app.js?v=51"></script>
 </body>
 </html>

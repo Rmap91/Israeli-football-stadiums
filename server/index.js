@@ -662,6 +662,42 @@ app.get('/api/stadiums/:id/matches', async (req, res) => {
 app.use(express.static(path.join(__dirname, '../public')));
 
 // Get league standings
+// Get standings for a specific league by ID
+app.get('/api/standings/:leagueId', async (req, res) => {
+  try {
+    const API_FOOTBALL_KEY = process.env.API_FOOTBALL_KEY;
+    const API_FOOTBALL_BASE_URL = 'https://v3.football.api-sports.io';
+    const currentSeason = 2025; // Israeli season 2025-2026
+    const leagueId = parseInt(req.params.leagueId);
+    
+    console.log(`📊 Fetching standings for league ${leagueId}, season ${currentSeason}`);
+    console.log(`🔑 API Key present: ${!!API_FOOTBALL_KEY}`);
+    
+    // Validate league ID
+    if (leagueId !== 383 && leagueId !== 382) {
+      return res.status(400).json({ error: 'Invalid league ID. Use 383 for Ligat Ha\'al or 382 for Liga Leumit' });
+    }
+    
+    const response = await axios.get(`${API_FOOTBALL_BASE_URL}/standings`, {
+      headers: { 'x-apisports-key': API_FOOTBALL_KEY },
+      params: { league: leagueId, season: currentSeason }
+    });
+
+    console.log(`✅ Standings API response status: ${response.status}`);
+    console.log(`📈 Standings data received:`, response.data.response?.length || 0, 'items');
+    
+    res.json({
+      standings: response.data.response[0]?.league.standings || []
+    });
+  } catch (error) {
+    console.error('❌ Error fetching standings for league', req.params.leagueId, ':', error.message);
+    if (error.response) {
+      console.error('API Error Response:', error.response.status, error.response.data);
+    }
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.get('/api/standings', async (req, res) => {
   try {
     const API_FOOTBALL_KEY = process.env.API_FOOTBALL_KEY;

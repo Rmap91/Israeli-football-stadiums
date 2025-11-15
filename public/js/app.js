@@ -1864,6 +1864,114 @@ class StadiumsApp {
     }
   }
 
+  openStandingsModal(leagueKey) {
+    const modal = document.getElementById('standingsModal');
+    const titleEl = document.getElementById('modalStandingsTitle');
+    
+    const leagueName = leagueKey === 'ligatHaal' ? 'ליגת העל' : 'ליגה לאומית';
+    
+    titleEl.textContent = leagueName;
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden'; // Prevent background scrolling
+    
+    // Add keyboard listener for ESC key
+    this._standingsEscapeListener = (e) => {
+      if (e.key === 'Escape') {
+        this.closeStandingsModal();
+      }
+    };
+    document.addEventListener('keydown', this._standingsEscapeListener);
+    
+    // Render standings in modal
+    this.renderStandingsInModal(leagueKey);
+  }
+
+  closeStandingsModal(event) {
+    // If event is provided and it's not a click on the backdrop, ignore
+    if (event && event.target.closest('.standings-modal__content') && !event.target.classList.contains('standings-modal__close')) {
+      return;
+    }
+    
+    const modal = document.getElementById('standingsModal');
+    modal.classList.remove('active');
+    document.body.style.overflow = ''; // Restore scrolling
+    
+    // Remove keyboard listener
+    if (this._standingsEscapeListener) {
+      document.removeEventListener('keydown', this._standingsEscapeListener);
+      this._standingsEscapeListener = null;
+    }
+  }
+
+  async renderStandingsInModal(leagueKey) {
+    const container = document.getElementById('modalStandingsContent');
+    container.innerHTML = '<div class="table-loading">טוען טבלה...</div>';
+
+    try {
+      const leagueId = leagueKey === 'ligatHaal' ? 383 : 382;
+      const response = await fetch(`/api/standings/${leagueId}`);
+      const data = await response.json();
+
+      if (data.standings && data.standings.length > 0) {
+        // Generate the table HTML using the same structure as renderStandings
+        const standings = data.standings[0];
+        const html = `
+          <table class="standings-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>קבוצה</th>
+                <th>משחקים</th>
+                <th>נצחונות</th>
+                <th>תיקו</th>
+                <th>הפסד</th>
+                <th>יחס שערים</th>
+                <th>הפרש שערים</th>
+                <th>נקודות</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${standings.map((team, index) => {
+                const position = index + 1;
+                const isTop3 = position <= 3;
+                const isBottom3 = position > standings.length - 3;
+                const rowClass = isTop3 ? 'top-3' : isBottom3 ? 'bottom-3' : '';
+                const gdClass = team.goalsDiff > 0 ? 'gd-positive' : team.goalsDiff < 0 ? 'gd-negative' : '';
+                const goalsFor = team.all.goals.for || 0;
+                const goalsAgainst = team.all.goals.against || 0;
+
+                return `
+                  <tr class="${rowClass}">
+                    <td class="rank-cell">${position}</td>
+                    <td>
+                      <div class="team-cell">
+                        <img src="${team.team.logo}" alt="${team.team.name}" class="team-logo" onerror="this.src='https://upload.wikimedia.org/wikipedia/en/thumb/1/1f/Soccer_ball.svg/50px-Soccer_ball.svg.png'">
+                        <span class="team-name">${team.team.name}</span>
+                      </div>
+                    </td>
+                    <td>${team.all.played}</td>
+                    <td>${team.all.win}</td>
+                    <td>${team.all.draw}</td>
+                    <td>${team.all.lose}</td>
+                    <td class="goals-ratio">${goalsAgainst}:${goalsFor}</td>
+                    <td class="${gdClass}">${team.goalsDiff > 0 ? '+' : ''}${team.goalsDiff}</td>
+                    <td class="points-cell">${team.points}</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        `;
+        container.innerHTML = html;
+      } else {
+        container.innerHTML = '<div class="no-data">אין נתוני טבלה זמינים</div>';
+      }
+    } catch (error) {
+      console.error('Error loading standings:', error);
+      container.innerHTML = '<div class="error-state">שגיאה בטעינת הטבלה</div>';
+    }
+  }
+
   renderMatchweekFixtures(matches) {
     if (!matches || matches.length === 0) {
       return '<div class="table-loading">אין משחקים במחזור זה</div>';
@@ -1921,17 +2029,17 @@ class StadiumsApp {
         }
       }
       
-      // Prepare venue name for both data attribute and onclick
-      const venueNameForData = match.fixture.venue.name.replace(/"/g, '&quot;');
-      const venueNameForJs = match.fixture.venue.name.replace(/'/g, "\\'");
+      // Prepare venue name for both data attribute and onclick - handle null venue names
+      const venueName = match.fixture.venue?.name || 'אצטדיון לא ידוע';
+      const venueNameForData = venueName.replace(/"/g, '&quot;');
+      const venueNameForJs = venueName.replace(/'/g, "\\'");
       
       return `
         <div class="fixture-item ${isLive ? 'live' : ''} ${isFinished ? 'finished' : ''}" 
              data-venue-name="${venueNameForData}" 
              data-clickable="true"
              data-fixture-id="${match.fixture.id}"
-             onclick="if(window.stadiumsApp){window.stadiumsApp.openStadiumByVenue('${venueNameForJs}');event.preventDefault();event.stopPropagation();}"
-             style="cursor: pointer;">
+             ${venueName !== 'אצטדיון לא ידוע' ? `onclick="if(window.stadiumsApp){window.stadiumsApp.openStadiumByVenue('${venueNameForJs}');event.preventDefault();event.stopPropagation();}" style="cursor: pointer;"` : ''}>
           <div class="fixture-header">
             <div class="fixture-date">
               <div class="date">${dateStr}</div>
@@ -1944,22 +2052,22 @@ class StadiumsApp {
             </div>
           </div>
           <div class="fixture-teams">
-            <div class="fixture-team">
-              <img src="${match.teams.home.logo}" alt="${match.teams.home.name}" class="team-logo-small">
+            <div class="fixture-team home">
               <span class="team-name">${match.teams.home.name}</span>
+              <img src="${match.teams.home.logo}" alt="${match.teams.home.name}" class="team-logo-small">
             </div>
             <div class="fixture-score">
               ${isLive || match.goals.home !== null ? 
                 `<span class="score">${match.goals.home} - ${match.goals.away}</span>` : 
-                '<span class="vs">vs</span>'}
+                '<span class="vs">VS</span>'}
             </div>
-            <div class="fixture-team">
-              <span class="team-name">${match.teams.away.name}</span>
+            <div class="fixture-team away">
               <img src="${match.teams.away.logo}" alt="${match.teams.away.name}" class="team-logo-small">
+              <span class="team-name">${match.teams.away.name}</span>
             </div>
           </div>
           ${scorersHtml}
-          <div class="fixture-venue">📍 ${match.fixture.venue.name}</div>
+          <div class="fixture-venue">📍 ${venueName}</div>
         </div>
       `;
     }).join('');
@@ -2046,7 +2154,8 @@ class StadiumsApp {
             <th>נצחונות</th>
             <th>תיקו</th>
             <th>הפסד</th>
-            <th>יחס</th>
+            <th>יחס שערים</th>
+            <th>הפרש שערים</th>
             <th>נקודות</th>
           </tr>
         </thead>
@@ -2057,6 +2166,8 @@ class StadiumsApp {
             const isBottom3 = position > standings.length - 3;
             const rowClass = isTop3 ? 'top-3' : isBottom3 ? 'bottom-3' : '';
             const gdClass = team.goalsDiff > 0 ? 'gd-positive' : team.goalsDiff < 0 ? 'gd-negative' : '';
+            const goalsFor = team.all.goals.for || 0;
+            const goalsAgainst = team.all.goals.against || 0;
 
             return `
               <tr class="${rowClass}">
@@ -2071,6 +2182,7 @@ class StadiumsApp {
                 <td>${team.all.win}</td>
                 <td>${team.all.draw}</td>
                 <td>${team.all.lose}</td>
+                <td class="goals-ratio">${goalsAgainst}:${goalsFor}</td>
                 <td class="${gdClass}">${team.goalsDiff > 0 ? '+' : ''}${team.goalsDiff}</td>
                 <td class="points-cell">${team.points}</td>
               </tr>
@@ -2128,6 +2240,8 @@ class StadiumsApp {
         document.getElementById(`${tabName}-content`).classList.add('active');
       }
       
+      // League info toggle is now handled by toggleLeagueInfo function
+      
       // Handle collapsible sections (parking/transit)
       const collapsibleTitle = e.target.closest('.collapsible-title');
       if (collapsibleTitle) {
@@ -2160,7 +2274,17 @@ class StadiumsApp {
   }
 }
 
+// Toggle league info section collapse/expand
+function toggleLeagueInfo() {
+  const section = document.querySelector('.league-info-section');
+  if (section) {
+    section.classList.toggle('collapsed');
+    console.log('League info section toggled:', section.classList.contains('collapsed') ? 'collapsed' : 'expanded');
+  }
+}
+
 // Initialize the application when the DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
   window.stadiumsApp = new StadiumsApp();
+  window.stadiumsApp.toggleLeagueInfo = toggleLeagueInfo;
 });
